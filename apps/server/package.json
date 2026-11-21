@@ -10,7 +10,7 @@
     "start:dev": "nest start --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "db:generate": "drizzle-kit generate",
-    "test": "tsc -p tsconfig.json && node --test --test-concurrency=1 dist-test/test/",
+    "test": "tsc -p tsconfig.json && node --test --test-concurrency=1 \"dist-test/test/*.test.js\"",
     "empaqueter": "npm run build && node scripts/empaqueter.mjs"
   },
   "dependencies": {

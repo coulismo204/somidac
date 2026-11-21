@@ -1,5 +1,6 @@
 # Installateur du poste principal : application + serveur + PostgreSQL + service Windows.
 appId: com.somidac.gestion
+electronVersion: 45.4.1
 productName: SOMIDAC
 executableName: SOMIDAC
 copyright: Copyright © SOMIDAC SARL

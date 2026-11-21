@@ -1,5 +1,6 @@
 # Installateur des postes secondaires : l'application seule (le serveur est sur le poste principal).
 appId: com.somidac.gestion
+electronVersion: 45.4.1
 productName: SOMIDAC
 executableName: SOMIDAC
 copyright: Copyright © SOMIDAC SARL
