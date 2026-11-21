@@ -31,23 +31,35 @@ packages/
 
 ## Développement
 
-Prérequis : Node.js ≥ 22, PostgreSQL (binaires) installé localement.
+Prérequis : Node.js ≥ 22, PostgreSQL (binaires) installé localement. Toutes les commandes se lancent
+**depuis la racine du projet**.
 
 ```bash
 npm install
-npm run dev:db          # base PostgreSQL de développement propre au projet (port 5433)
+npm run dev:db                              # base PostgreSQL de développement (port 5433)
 npm run build -w @somidac/shared
 cp apps/server/.env.example apps/server/.env
-npm run dev:server      # https://127.0.0.1:7443/api/v1/sante
-npm run dev:desktop     # application de bureau (dans un autre terminal)
-npm test                # tests de bout en bout (TLS mutuel réel)
+npm run dev:server                          # terminal 1 : https://127.0.0.1:7443/api/v1/sante
+npm run dev:desktop                         # terminal 2 : application de bureau
+npm test -w @somidac/server                 # tests de bout en bout (TLS mutuel réel)
+npm test -w @somidac/desktop
 ```
 
 Au premier lancement, choisir **Poste principal** : l'assistant crée le compte gérant et la clé du poste.
 Les autres postes s'enregistrent avec un code créé dans **Administration → Appareils**.
 
-Sous Linux sans trousseau de clés (développement uniquement), lancer Electron avec
-`--password-store=basic` ; sous Windows, la clé de l'appareil est protégée par DPAPI.
-Si VS Code exporte `ELECTRON_RUN_AS_NODE=1`, le retirer avant de lancer l'application.
+`npm run dev:desktop` s'occupe des particularités de Linux en développement : variable
+`ELECTRON_RUN_AS_NODE` exportée par VS Code, absence de trousseau de clés, bac à sable de Chromium non
+configuré (la commande pour le configurer est affichée). Sous Windows, la clé de l'appareil est protégée par DPAPI.
+
+Repartir d'une base vide : `bash scripts/dev-db.sh reset && rm -rf .dev/serveur`.
 
 Nouvelle migration après modification du schéma : `npm run db:generate -w @somidac/server`.
+
+## Installateurs Windows
+
+Construits par GitHub Actions à chaque envoi sur `main` (onglet **Actions → Intégration continue →
+Artifacts**) : `SOMIDAC-Poste-principal-*-Setup.exe` (application + serveur + PostgreSQL + service
+Windows) et `SOMIDAC-Poste-*-Setup.exe` (postes secondaires). La CI installe réellement le poste
+principal sur Windows et vérifie le service, le chiffrement DPAPI, l'écoute locale de la base et la
+désinstallation.
