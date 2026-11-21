@@ -1,0 +1,27 @@
+{
+  "name": "somidac",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Application de gestion SOMIDAC SARL — distribution cosmétiques & divers produits",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @somidac/shared && npm run build -w @somidac/server",
+    "dev:db": "bash scripts/dev-db.sh start",
+    "dev:server": "npm run start:dev -w @somidac/server",
+    "dev:desktop": "npm run dev -w @somidac/desktop",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "allowScripts": {
+    "argon2@0.45.2": true,
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
+  }
+}
