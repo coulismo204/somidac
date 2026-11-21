@@ -13,7 +13,7 @@ export class ErreurApi extends Error {
   }
 }
 
-export type Phase = 'chargement' | 'configuration' | 'revoque' | 'connexion' | 'application';
+export type Phase = 'chargement' | 'erreur-demarrage' | 'configuration' | 'revoque' | 'connexion' | 'application';
 
 interface ContexteSession {
   phase: Phase;
@@ -21,6 +21,8 @@ interface ContexteSession {
   profil?: Profil;
   verrouille: boolean;
   messageConnexion?: string;
+  erreurDemarrage?: string;
+  demarrer(): Promise<void>;
   rafraichirPoste(): Promise<void>;
   connecter(identifiant: string, motDePasse: string): Promise<void>;
   deconnecter(message?: string): Promise<void>;
@@ -51,15 +53,34 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [verrouille, setVerrouille] = useState(false);
   const [messageConnexion, setMessageConnexion] = useState<string>();
 
+  const [erreurDemarrage, setErreurDemarrage] = useState<string>();
+
   const rafraichirPoste = useCallback(async () => {
     const etat = deballer(await window.somidac.poste.etat());
     setPoste(etat);
     setPhase(etat.configure ? 'connexion' : 'configuration');
   }, []);
 
-  useEffect(() => {
-    void rafraichirPoste();
+  /** Démarrage : jamais d'écran bloqué sans explication (erreur affichée + « Réessayer »). */
+  const demarrer = useCallback(async () => {
+    setErreurDemarrage(undefined);
+    setPhase('chargement');
+    try {
+      if (!window.somidac) throw new Error("Le lien avec l'application n'est pas disponible (préchargement).");
+      await Promise.race([
+        rafraichirPoste(),
+        new Promise((_, refuser) => setTimeout(() => refuser(new Error("L'application ne répond pas (délai dépassé).")), 15_000)),
+      ]);
+    } catch (e) {
+      console.error('Démarrage impossible', e);
+      setErreurDemarrage(e instanceof Error ? e.message : String(e));
+      setPhase('erreur-demarrage');
+    }
   }, [rafraichirPoste]);
+
+  useEffect(() => {
+    void demarrer();
+  }, [demarrer]);
 
   const quitterSession = useCallback((message?: string) => {
     setProfil(undefined);
@@ -161,6 +182,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       profil,
       verrouille,
       messageConnexion,
+      erreurDemarrage,
+      demarrer,
       rafraichirPoste,
       connecter,
       deconnecter,
@@ -170,7 +193,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       appeler,
       peut,
     }),
-    [phase, poste, profil, verrouille, messageConnexion, rafraichirPoste, connecter, deconnecter, verrouiller, deverrouiller, rechargerProfil, appeler, peut],
+    [phase, poste, profil, verrouille, messageConnexion, erreurDemarrage, demarrer, rafraichirPoste, connecter, deconnecter, verrouiller, deverrouiller, rechargerProfil, appeler, peut],
   );
 
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;

@@ -20,12 +20,29 @@ function Autorise({ permission, children }: { permission: string; children: Reac
   return peut(permission) ? <>{children}</> : <Navigate to="/" replace />;
 }
 
+function ErreurDemarrage() {
+  const { erreurDemarrage, demarrer } = useSession();
+  return (
+    <div className="chargement">
+      <div className="carte" style={{ maxWidth: 460, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <h2>Démarrage impossible</h2>
+        <div className="message erreur">{erreurDemarrage}</div>
+        <button className="bouton" onClick={() => void demarrer()}>
+          Réessayer
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function App() {
   const { phase, profil, verrouille } = useSession();
 
   switch (phase) {
     case 'chargement':
       return <div className="chargement">Démarrage…</div>;
+    case 'erreur-demarrage':
+      return <ErreurDemarrage />;
     case 'configuration':
       return <Configuration />;
     case 'revoque':
