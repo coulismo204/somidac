@@ -99,14 +99,10 @@ jobs:
           if (-not (Test-Path "$env:ProgramData\SOMIDAC\base\PG_VERSION")) { throw 'Les données ont été supprimées' }
           Write-Output 'Désinstallation : service retiré, données conservées'
 
-      - name: Journaux du service
-        if: always()
+      - name: Diagnostic du service (en cas d'échec)
+        if: failure()
         shell: pwsh
-        run: |
-          Get-ChildItem "$env:ProgramData\SOMIDAC\journaux" -ErrorAction SilentlyContinue | ForEach-Object {
-            Write-Output "===== $($_.Name)"
-            Get-Content $_.FullName -Tail 60
-          }
+        run: ./scripts/diagnostic-windows.ps1 'Installation Windows'
 
       - uses: actions/upload-artifact@v4
         with:
