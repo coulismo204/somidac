@@ -29,8 +29,9 @@
 !macro customInstall
   ; Données : C:\ProgramData\SOMIDAC, accessibles seulement au système, aux administrateurs
   ; et au compte du service (NetworkService). Les autres utilisateurs n'y ont pas accès.
-  CreateDirectory "$COMMONAPPDATA\SOMIDAC"
-  nsExec::ExecToLog 'icacls "$COMMONAPPDATA\SOMIDAC" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-20:(OI)(CI)M /T /C /Q'
+  ReadEnvStr $R2 PROGRAMDATA
+  CreateDirectory "$R2\SOMIDAC"
+  nsExec::ExecToLog 'icacls "$R2\SOMIDAC" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-20:(OI)(CI)M /T /C /Q'
 
   ; Service Windows (démarrage automatique, redémarrage en cas d'échec).
   nsExec::ExecToLog '"$INSTDIR\resources\service\SOMIDAC-Serveur.exe" install'
