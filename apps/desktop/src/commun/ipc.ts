@@ -26,6 +26,16 @@ export interface Profil {
   permissions: string[];
 }
 
+/** Diagnostic du serveur installé sur ce PC (poste principal). */
+export interface EtatServeurLocal {
+  joignable: boolean;
+  initialise: boolean;
+  /** Faux si l'application a été installée avec l'installateur des postes secondaires. */
+  installeAvecServeur: boolean;
+  /** État du service Windows « SOMIDAC Serveur ». */
+  service: 'demarre' | 'demarrage' | 'arrete' | 'absent' | 'inconnu';
+}
+
 export type Resultat<T> = { ok: true; valeur: T } | { ok: false; code: string; message: string };
 
 export interface ReponseApi<T = unknown> {
@@ -36,7 +46,7 @@ export interface ReponseApi<T = unknown> {
 export interface ApiSomidac {
   poste: {
     etat(): Promise<Resultat<EtatPoste>>;
-    etatServeurLocal(): Promise<Resultat<{ joignable: boolean; initialise: boolean }>>;
+    etatServeurLocal(): Promise<Resultat<EtatServeurLocal>>;
     adressesReseau(): Promise<Resultat<string[]>>;
     initialiserPrincipal(donnees: {
       raisonSociale?: string;

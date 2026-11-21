@@ -1,11 +1,12 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
+import type { EtatServeurLocal } from '../../../../commun/ipc';
 import { Champ, Message } from '../../composants/communs';
 import { EcranAccueil } from '../../composants/EcranAccueil';
 import { messageErreur, useSession } from '../../contexte';
 
 export function ConfigPostePrincipal({ onRetour }: { onRetour: () => void }) {
   const { rafraichirPoste } = useSession();
-  const [serveur, setServeur] = useState<{ joignable: boolean; initialise: boolean }>();
+  const [serveur, setServeur] = useState<EtatServeurLocal>();
   const serveurPret = serveur?.joignable;
   const [erreur, setErreur] = useState<string>();
   const [envoi, setEnvoi] = useState(false);
@@ -19,14 +20,19 @@ export function ConfigPostePrincipal({ onRetour }: { onRetour: () => void }) {
   });
   const maj = (cle: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [cle]: e.target.value });
 
-  const verifierServeur = async () => {
-    setServeur(undefined);
+  const verifierServeur = useCallback(async () => {
     const r = await window.somidac.poste.etatServeurLocal();
-    setServeur(r.ok ? r.valeur : { joignable: false, initialise: false });
-  };
+    setServeur(r.ok ? r.valeur : { joignable: false, initialise: false, installeAvecServeur: true, service: 'inconnu' });
+  }, []);
+  // Vérifie tout de suite, puis toutes les 5 secondes tant que le serveur ne répond pas.
   useEffect(() => {
     void verifierServeur();
-  }, []);
+  }, [verifierServeur]);
+  useEffect(() => {
+    if (serveurPret) return;
+    const t = window.setInterval(() => void verifierServeur(), 5000);
+    return () => window.clearInterval(t);
+  }, [serveurPret, verifierServeur]);
 
   const valider = async (e: FormEvent) => {
     e.preventDefault();
@@ -61,15 +67,7 @@ export function ConfigPostePrincipal({ onRetour }: { onRetour: () => void }) {
         <h1>Poste principal</h1>
         <p>Créez le compte du gérant. Il pourra ensuite ajouter les autres utilisateurs et enregistrer les autres postes.</p>
       </div>
-      {serveur && !serveur.joignable && (
-        <Message type="attention">
-          Le serveur SOMIDAC ne répond pas sur ce PC. Vérifiez qu'il est installé et démarré, puis{' '}
-          <a href="#" onClick={(e) => (e.preventDefault(), void verifierServeur())}>
-            réessayez
-          </a>
-          .
-        </Message>
-      )}
+      {serveur && !serveur.joignable && <DiagnosticServeur etat={serveur} />}
       <form onSubmit={valider} className="grille-champs">
         <Champ className="pleine" libelle="Nom de l'entreprise" value={f.raisonSociale} onChange={maj('raisonSociale')} required />
         <Champ className="pleine" libelle="Nom complet du gérant" value={f.nomComplet} onChange={maj('nomComplet')} required autoFocus />
@@ -151,4 +149,44 @@ function ReenregistrementPostePrincipal({ onRetour }: { onRetour: () => void }) 
       </form>
     </EcranAccueil>
   );
+}
+
+/** Explique pourquoi le serveur de ce PC ne répond pas, et quoi faire. */
+function DiagnosticServeur({ etat }: { etat: EtatServeurLocal }) {
+  if (!etat.installeAvecServeur) {
+    return (
+      <Message type="erreur">
+        Cet ordinateur a été installé avec l'installateur des <strong>postes secondaires</strong> : il ne contient pas le
+        serveur. Pour en faire le poste principal, désinstallez SOMIDAC puis installez{' '}
+        <strong>SOMIDAC-Poste-principal-…-Setup.exe</strong> (clic droit → Exécuter en tant qu'administrateur). Sinon,
+        revenez en arrière et choisissez « Poste secondaire ».
+      </Message>
+    );
+  }
+  switch (etat.service) {
+    case 'absent':
+      return (
+        <Message type="erreur">
+          Le service « SOMIDAC Serveur » n'est pas installé. Relancez l'installateur du poste principal en tant
+          qu'administrateur.
+        </Message>
+      );
+    case 'demarrage':
+    case 'demarre':
+      return (
+        <Message type="info">
+          Le serveur démarre… À la première installation, la création de la base peut prendre jusqu'à une minute. Cette
+          page se met à jour toute seule.
+        </Message>
+      );
+    case 'arrete':
+      return (
+        <Message type="attention">
+          Le service « SOMIDAC Serveur » est arrêté. Windows le redémarre automatiquement après un échec ; si ce message
+          reste affiché, redémarrez le PC. S'il persiste, le journal se trouve dans C:\ProgramData\SOMIDAC\journaux.
+        </Message>
+      );
+    default:
+      return <Message type="attention">Le serveur SOMIDAC ne répond pas sur ce PC. Nouvelle vérification dans quelques secondes…</Message>;
+  }
 }

@@ -1,7 +1,9 @@
 import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, Menu, safeStorage, session, shell } from 'electron';
+import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { CANAUX, Resultat } from '../commun/ipc';
+import { CANAUX, EtatServeurLocal, Resultat } from '../commun/ipc';
 import { ErreurReseau } from './poste/https';
 import { Chiffreur, ErreurPoste, Poste, PORT_SERVEUR_PAR_DEFAUT } from './poste/poste';
 
@@ -24,6 +26,24 @@ function adressesReseau(): string[] {
     for (const i of interfaces ?? []) if (i.family === 'IPv4' && !i.internal) res.push(i.address);
   }
   return res;
+}
+
+/** État du service Windows « SOMIDAC Serveur » (lecture seule, sans droits administrateur). */
+function etatServiceWindows(): EtatServeurLocal['service'] {
+  if (process.platform !== 'win32') return 'inconnu';
+  const r = spawnSync('sc.exe', ['query', 'SOMIDAC-Serveur'], { encoding: 'utf8', windowsHide: true, timeout: 5000 });
+  if (r.status === 1060) return 'absent';
+  const sortie = r.stdout ?? '';
+  if (/RUNNING/.test(sortie)) return 'demarre';
+  if (/START_PENDING/.test(sortie)) return 'demarrage';
+  if (/STOPPED|STOP_PENDING/.test(sortie)) return 'arrete';
+  return 'inconnu';
+}
+
+async function diagnosticServeurLocal(): Promise<EtatServeurLocal> {
+  const { joignable, initialise } = await poste.etatServeurLocal(PORT_SERVEUR_PAR_DEFAUT);
+  const installeAvecServeur = !app.isPackaged || fs.existsSync(path.join(process.resourcesPath, 'service', 'SOMIDAC-Serveur.exe'));
+  return { joignable, initialise, installeAvecServeur, service: etatServiceWindows() };
 }
 
 /** Seuls nos propres écrans peuvent appeler le processus principal. */
@@ -49,7 +69,7 @@ function gerer<A extends unknown[], T>(canal: string, action: (...args: A) => Pr
 
 function enregistrerCanaux() {
   gerer(CANAUX.ETAT, () => poste.etat());
-  gerer(CANAUX.SERVEUR_LOCAL, () => poste.etatServeurLocal(PORT_SERVEUR_PAR_DEFAUT));
+  gerer(CANAUX.SERVEUR_LOCAL, () => diagnosticServeurLocal());
   gerer(CANAUX.ADRESSES, () => adressesReseau());
   gerer(CANAUX.INITIALISER, (donnees: Parameters<Poste['initialiserPostePrincipal']>[0]) =>
     poste.initialiserPostePrincipal({ ...donnees, port: PORT_SERVEUR_PAR_DEFAUT }),
