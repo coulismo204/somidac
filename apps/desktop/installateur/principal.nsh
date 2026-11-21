@@ -1,15 +1,27 @@
 ; Installation du poste principal : service « SOMIDAC Serveur », dossier de données protégé, pare-feu.
 ; Inclus par electron-builder (nsis.include).
 
+!include LogicLib.nsh
+
 !define SOMIDAC_SERVICE "SOMIDAC-Serveur"
 !define SOMIDAC_PORT "7443"
 
-; Avant de remplacer les fichiers (installation ou mise à jour) : arrêter le service,
-; qui utilise SOMIDAC.exe, puis faire la vérification habituelle « application ouverte ».
+; Avant de remplacer ou supprimer les fichiers (installation, mise à jour, désinstallation) :
+; arrêter le service, qui utilise SOMIDAC.exe, puis vérifier que l'application n'est pas ouverte.
+; (Vérification écrite ici car celle d'electron-builder n'est plus disponible dès qu'on la personnalise.)
 !macro customCheckAppRunning
   nsExec::Exec 'net stop ${SOMIDAC_SERVICE}'
-  Sleep 2000
-  !insertmacro _CHECK_APP_RUNNING
+  Pop $R0
+  Sleep 1500
+  ${Do}
+    ${nsProcess::FindProcess} "${APP_EXECUTABLE_FILENAME}" $R0
+    ${If} $R0 != 0
+      ${Break}
+    ${EndIf}
+    ${IfNot} ${Cmd} `MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "SOMIDAC est ouvert sur ce poste.$\r$\nFermez l'application, puis cliquez sur Réessayer." /SD IDCANCEL IDRETRY`
+      Quit
+    ${EndIf}
+  ${Loop}
 !macroend
 
 !macro customInstall
