@@ -44,6 +44,18 @@ export class AuthController {
     return this.auth.deverrouiller(sessionId, u.id, a.id, dto.motDePasse);
   }
 
+  @Post('verrouiller')
+  @HttpCode(200)
+  @AutoriseSiVerrouillee()
+  @AutoriseAvantChangementMotDePasse()
+  verrouiller(
+    @SessionCourante() sessionId: string,
+    @UtilisateurCourant() u: UtilisateurConnecte,
+    @AppareilCourant() a: AppareilConnecte,
+  ) {
+    return this.auth.verrouiller(sessionId, u.id, a.id);
+  }
+
   @Post('deconnexion')
   @HttpCode(200)
   @AutoriseSiVerrouillee()

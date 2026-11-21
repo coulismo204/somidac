@@ -94,6 +94,36 @@ describe('Socle de sécurité', () => {
     });
   });
 
+  describe('Réenregistrement du poste principal (clé perdue)', () => {
+    it('refuse un mauvais mot de passe', async () => {
+      const id = await nouvelleIdentite();
+      const r = await requete(srv, 'POST', '/initialisation/poste-principal', {
+        corps: { identifiant: 'gerant', motDePasse: 'mauvais', appareil: { nom: 'Poste principal', csrPem: id.csrPem } },
+      });
+      assert.equal(r.statut, 401);
+      assert.equal(r.corps.code, E.IDENTIFIANTS_INCORRECTS);
+    });
+
+    it('avec les identifiants du gérant, le poste principal reçoit une nouvelle clé', async () => {
+      const id = await nouvelleIdentite();
+      const r = await requete(srv, 'POST', '/initialisation/poste-principal', {
+        corps: { identifiant: 'gerant', motDePasse: GERANT.motDePasse, appareil: { nom: 'Poste principal (réinstallé)', csrPem: id.csrPem } },
+      });
+      assert.equal(r.statut, 200, JSON.stringify(r.corps));
+      id.certificatPem = r.corps.certificatPem;
+      const c = await requete(srv, 'POST', '/auth/connexion', {
+        appareil: id,
+        corps: { identifiant: 'gerant', motDePasse: GERANT.motDePasse },
+      });
+      assert.equal(c.statut, 200);
+      // On révoque cette identité de test pour ne pas fausser la suite.
+      const liste = await requete(srv, 'GET', '/appareils', { appareil: postePrincipal, jeton: jetonGerant });
+      const reinst = liste.corps.find((a: { nom: string }) => a.nom === 'Poste principal (réinstallé)');
+      const rev = await requete(srv, 'POST', `/appareils/${reinst.id}/revoquer`, { appareil: postePrincipal, jeton: jetonGerant });
+      assert.equal(rev.statut, 200);
+    });
+  });
+
   describe('Enregistrement d’un nouvel appareil par clé chiffrée', () => {
     let code = '';
 
@@ -342,6 +372,19 @@ describe('Socle de sécurité', () => {
       assert.equal(ok.statut, 200);
       const moi = await requete(srv, 'GET', '/auth/moi', { appareil: postePrincipal, jeton: jetonGerant });
       assert.equal(moi.statut, 200);
+    });
+
+    it('le verrouillage manuel est appliqué par le serveur', async () => {
+      const v = await requete(srv, 'POST', '/auth/verrouiller', { appareil: postePrincipal, jeton: jetonGerant });
+      assert.equal(v.statut, 200);
+      const bloque = await requete(srv, 'GET', '/parametres', { appareil: postePrincipal, jeton: jetonGerant });
+      assert.equal(bloque.corps.code, E.SESSION_VERROUILLEE);
+      const ok = await requete(srv, 'POST', '/auth/deverrouiller', {
+        appareil: postePrincipal,
+        jeton: jetonGerant,
+        corps: { motDePasse: GERANT.motDePasse },
+      });
+      assert.equal(ok.statut, 200);
     });
 
     it('le gérant ne peut pas se désactiver ni retirer le dernier droit d’administration', async () => {

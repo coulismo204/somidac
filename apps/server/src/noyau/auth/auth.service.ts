@@ -25,12 +25,15 @@ export class AuthService {
     private readonly audit: AuditService,
   ) {}
 
-  async connecter(dto: ConnexionDto, appareilId: string) {
-    const identifiant = dto.identifiant.trim().toLowerCase();
+  /**
+   * Vérifie identifiant et mot de passe, avec blocage après 5 échecs (§10.2).
+   * Utilisé pour la connexion et pour le réenregistrement du poste principal.
+   */
+  async verifierIdentifiants(identifiantSaisi: string, motDePasse: string, appareilId: string | null): Promise<Utilisateur> {
+    const identifiant = identifiantSaisi.trim().toLowerCase();
     const [u] = await this.db.select().from(utilisateurs).where(eq(utilisateurs.identifiant, identifiant));
-    const maintenant = new Date();
 
-    if (u?.bloqueJusquA && u.bloqueJusquA > maintenant) {
+    if (u?.bloqueJusquA && u.bloqueJusquA > new Date()) {
       await this.audit.enregistrer(this.db, {
         action: 'connexion.refusee_compte_bloque',
         utilisateurId: u.id,
@@ -40,7 +43,7 @@ export class AuthService {
     }
 
     // Même temps de réponse que l'identifiant existe ou non.
-    const valide = await verifierMotDePasse(u?.hashMotDePasse ?? (await obtenirHashFactice()), dto.motDePasse);
+    const valide = await verifierMotDePasse(u?.hashMotDePasse ?? (await obtenirHashFactice()), motDePasse);
     if (!u || !valide || !u.actif) {
       if (u) await this.enregistrerEchec(u, appareilId, 'connexion.echec');
       else
@@ -51,6 +54,12 @@ export class AuthService {
         });
       throw new ErreurMetier(E.IDENTIFIANTS_INCORRECTS, 'Identifiant ou mot de passe incorrect', HttpStatus.UNAUTHORIZED);
     }
+    return u;
+  }
+
+  async connecter(dto: ConnexionDto, appareilId: string) {
+    const u = await this.verifierIdentifiants(dto.identifiant, dto.motDePasse, appareilId);
+    const maintenant = new Date();
 
     return this.db.transaction(async (tx) => {
       await tx
@@ -75,6 +84,15 @@ export class AuthService {
       await tx.update(utilisateurs).set({ echecsConnexion: 0 }).where(eq(utilisateurs.id, u.id));
       await this.sessions.deverrouiller(tx, sessionId);
       await this.audit.enregistrer(tx, { action: 'session.deverrouillee', utilisateurId: u.id, appareilId });
+    });
+    return { ok: true };
+  }
+
+  /** Verrouillage demandé par l'utilisateur ou après inactivité : appliqué côté serveur. */
+  async verrouiller(sessionId: string, utilisateurId: string, appareilId: string) {
+    await this.db.transaction(async (tx) => {
+      await this.sessions.verrouiller(tx, sessionId);
+      await this.audit.enregistrer(tx, { action: 'session.verrouillee', utilisateurId, appareilId });
     });
     return { ok: true };
   }
@@ -128,7 +146,7 @@ export class AuthService {
     };
   }
 
-  private async enregistrerEchec(u: Utilisateur, appareilId: string, action: string) {
+  private async enregistrerEchec(u: Utilisateur, appareilId: string | null, action: string) {
     const echecs = u.echecsConnexion + 1;
     const bloque = echecs >= ECHECS_CONNEXION_MAX;
     await this.db.transaction(async (tx) => {

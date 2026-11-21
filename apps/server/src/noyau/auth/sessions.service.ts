@@ -53,6 +53,10 @@ export class SessionsService {
     return { etat: 'valide', sessionId: s.id, utilisateurId: s.utilisateurId };
   }
 
+  async verrouiller(tx: DbOuTx, sessionId: string) {
+    await tx.update(sessions).set({ verrouillee: true }).where(eq(sessions.id, sessionId));
+  }
+
   async deverrouiller(tx: DbOuTx, sessionId: string) {
     await tx.update(sessions).set({ verrouillee: false, derniereActivite: new Date() }).where(eq(sessions.id, sessionId));
   }

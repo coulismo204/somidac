@@ -10,7 +10,7 @@ Client–serveur et modulaire dès le premier jour :
 ```
 apps/
   server/    Serveur SOMIDAC (API) — NestJS + PostgreSQL, HTTPS avec TLS mutuel
-  desktop/   Application SOMIDAC (écrans) — Electron + React        (lot 1, en cours)
+  desktop/   Application SOMIDAC (écrans) — Electron + React
 packages/
   shared/    Contrats partagés : permissions, rôles, modules, schémas de validation
 ```
@@ -39,7 +39,15 @@ npm run dev:db          # base PostgreSQL de développement propre au projet (po
 npm run build -w @somidac/shared
 cp apps/server/.env.example apps/server/.env
 npm run dev:server      # https://127.0.0.1:7443/api/v1/sante
+npm run dev:desktop     # application de bureau (dans un autre terminal)
 npm test                # tests de bout en bout (TLS mutuel réel)
 ```
+
+Au premier lancement, choisir **Poste principal** : l'assistant crée le compte gérant et la clé du poste.
+Les autres postes s'enregistrent avec un code créé dans **Administration → Appareils**.
+
+Sous Linux sans trousseau de clés (développement uniquement), lancer Electron avec
+`--password-store=basic` ; sous Windows, la clé de l'appareil est protégée par DPAPI.
+Si VS Code exporte `ELECTRON_RUN_AS_NODE=1`, le retirer avant de lancer l'application.
 
 Nouvelle migration après modification du schéma : `npm run db:generate -w @somidac/server`.

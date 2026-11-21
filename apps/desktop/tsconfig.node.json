@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "lib": ["ES2023", "DOM"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "paths": { "@somidac/shared": ["../../packages/shared/src/index.ts"] }
+  },
+  "include": ["electron.vite.config.ts", "src/main", "src/preload", "src/commun"]
+}

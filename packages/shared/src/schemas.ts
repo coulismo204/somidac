@@ -102,6 +102,24 @@ export const initialisationSchema = z.object({
 });
 export type InitialisationDto = z.infer<typeof initialisationSchema>;
 
+/** Réenregistrement du poste principal (clé perdue, Windows réinstallé) : local uniquement, avec le gérant. */
+export const reenregistrementPostePrincipalSchema = z.object({
+  identifiant: z.string().trim().min(1).max(64),
+  motDePasse: z.string().min(1).max(128),
+  appareil: z.object({
+    nom: z.string().trim().min(2).max(60),
+    csrPem: z.string().min(100).max(10_000),
+    infosSysteme: z
+      .object({
+        nomMachine: z.string().max(120).optional(),
+        systeme: z.string().max(120).optional(),
+        versionApp: z.string().max(40).optional(),
+      })
+      .default({}),
+  }),
+});
+export type ReenregistrementPostePrincipalDto = z.infer<typeof reenregistrementPostePrincipalSchema>;
+
 export const deverrouillageSchema = z.object({
   motDePasse: z.string().min(1).max(128),
 });

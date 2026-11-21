@@ -1,8 +1,18 @@
-import { Body, Controller, Get, HttpStatus, Inject, Post } from '@nestjs/common';
-import { CODES_ERREUR as E, InitialisationDto, initialisationSchema, ROLES_PAR_DEFAUT } from '@somidac/shared';
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post } from '@nestjs/common';
+import {
+  CODES_ERREUR as E,
+  InitialisationDto,
+  initialisationSchema,
+  PERMISSIONS,
+  ReenregistrementPostePrincipalDto,
+  reenregistrementPostePrincipalSchema,
+  ROLES_PAR_DEFAUT,
+} from '@somidac/shared';
 import { eq, sql } from 'drizzle-orm';
 import { AppareilsService } from '../appareils/appareils.service';
 import { AuditService } from '../audit/audit.service';
+import { AuthService } from '../auth/auth.service';
+import { PermissionsService } from '../auth/permissions.service';
 import { LocalSeulement, Public, SansAppareil } from '../auth/decorateurs';
 import { DB, Db } from '../base/base';
 import { parametres } from '../base/schema';
@@ -27,6 +37,8 @@ export class InitialisationController {
     private readonly utilisateurs: UtilisateursService,
     private readonly appareils: AppareilsService,
     private readonly audit: AuditService,
+    private readonly auth: AuthService,
+    private readonly permissions: PermissionsService,
   ) {}
 
   @Get()
@@ -79,5 +91,42 @@ export class InitialisationController {
     });
     this.parametres.invaliderCache();
     return resultat;
+  }
+
+  /**
+   * Le poste principal a perdu sa clé (Windows réinstallé, échec à la première configuration) :
+   * il est réenregistré depuis le PC lui-même, avec les identifiants d'un gérant.
+   */
+  @Post('poste-principal')
+  @HttpCode(200)
+  async reenregistrerPostePrincipal(
+    @Body(new ZodPipe(reenregistrementPostePrincipalSchema)) dto: ReenregistrementPostePrincipalDto,
+  ) {
+    const p = await this.parametres.lire();
+    if (!p.initialise) {
+      throw new ErreurMetier('NON_INITIALISE', "Le poste principal n'est pas encore initialisé", HttpStatus.CONFLICT);
+    }
+    const u = await this.auth.verifierIdentifiants(dto.identifiant, dto.motDePasse, null);
+    const permissions = await this.permissions.permissionsUtilisateur(u.id);
+    if (!permissions.has(PERMISSIONS.ADMIN_APPAREILS)) {
+      throw new ErreurMetier(E.PERMISSION_REFUSEE, "Seul un gérant peut réenregistrer le poste principal", HttpStatus.FORBIDDEN);
+    }
+    return this.db.transaction(async (tx) => {
+      const poste = await this.appareils.enregistrerPostePrincipal(
+        tx,
+        dto.appareil.nom,
+        dto.appareil.csrPem,
+        dto.appareil.infosSysteme as Record<string, string>,
+      );
+      await this.audit.enregistrer(tx, {
+        action: 'appareil.poste_principal_reenregistre',
+        utilisateurId: u.id,
+        appareilId: poste.appareil.id,
+        entite: 'appareil',
+        entiteId: poste.appareil.id,
+        details: { nom: dto.appareil.nom },
+      });
+      return { appareilId: poste.appareil.id, certificatPem: poste.certificatPem, caPem: poste.caPem };
+    });
   }
 }
