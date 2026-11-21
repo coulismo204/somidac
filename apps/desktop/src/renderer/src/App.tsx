@@ -6,6 +6,7 @@ import { useSession } from './contexte';
 import { Appareils } from './pages/admin/Appareils';
 import { Journal } from './pages/admin/Journal';
 import { Parametres } from './pages/admin/Parametres';
+import { Sauvegardes } from './pages/admin/Sauvegardes';
 import { Utilisateurs } from './pages/admin/Utilisateurs';
 import { AppareilRevoque } from './pages/AppareilRevoque';
 import { ChangementMotDePasse } from './pages/ChangementMotDePasse';
@@ -66,6 +67,7 @@ export function App() {
           <Route path="/utilisateurs" element={<Autorise permission={PERMISSIONS.ADMIN_UTILISATEURS}><Utilisateurs /></Autorise>} />
           <Route path="/appareils" element={<Autorise permission={PERMISSIONS.ADMIN_APPAREILS}><Appareils /></Autorise>} />
           <Route path="/parametres" element={<Autorise permission={PERMISSIONS.ADMIN_PARAMETRES}><Parametres /></Autorise>} />
+          <Route path="/sauvegardes" element={<Autorise permission={PERMISSIONS.ADMIN_SAUVEGARDES}><Sauvegardes /></Autorise>} />
           <Route path="/journal" element={<Autorise permission={PERMISSIONS.AUDIT_VOIR}><Journal /></Autorise>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

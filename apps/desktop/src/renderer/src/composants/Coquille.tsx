@@ -1,10 +1,11 @@
 import { LIBELLES_PERMISSIONS, PERMISSIONS, ROLES_PAR_DEFAUT } from '@somidac/shared';
-import { ReactNode } from 'react';
+import { FormEvent, ReactNode, useState } from 'react';
 import { NavLink } from 'react-router';
 import { useSession } from '../contexte';
 import { initiales } from '../format';
 import logo from '../logo-somidac.jpeg';
-import { Icone } from './communs';
+import { messageErreur } from '../contexte';
+import { Champ, Icone, Message, Modale } from './communs';
 
 /** Modules métier : ils apparaissent au fil des lots (cahier des charges §11). */
 const MODULES_METIER = [
@@ -21,12 +22,61 @@ function libelleRole(permissions: string[]): string {
   return role?.libelle ?? `${permissions.length} droit${permissions.length > 1 ? 's' : ''}`;
 }
 
+/** « Mon mot de passe » : chaque utilisateur peut changer le sien. */
+function MonMotDePasse({ onFermer }: { onFermer: () => void }) {
+  const { appeler } = useSession();
+  const [f, setF] = useState({ ancien: '', nouveau: '', confirmation: '' });
+  const [erreur, setErreur] = useState<string>();
+  const [fait, setFait] = useState(false);
+  const valider = async (e: FormEvent) => {
+    e.preventDefault();
+    setErreur(undefined);
+    if (f.nouveau.length < 8) return setErreur('Au moins 8 caractères.');
+    if (f.nouveau !== f.confirmation) return setErreur('Les deux mots de passe ne correspondent pas.');
+    try {
+      await appeler('POST', '/auth/mot-de-passe', { ancienMotDePasse: f.ancien, nouveauMotDePasse: f.nouveau });
+      setFait(true);
+    } catch (err) {
+      setErreur(messageErreur(err));
+    }
+  };
+  return (
+    <Modale titre="Mon mot de passe" onFermer={onFermer}>
+      {fait ? (
+        <>
+          <Message type="succes">Mot de passe changé. Vos sessions sur les autres postes ont été fermées.</Message>
+          <div className="actions">
+            <button className="bouton" onClick={onFermer}>
+              Fermer
+            </button>
+          </div>
+        </>
+      ) : (
+        <form onSubmit={valider} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Champ libelle="Mot de passe actuel" type="password" value={f.ancien} onChange={(e) => setF({ ...f, ancien: e.target.value })} required autoFocus />
+          <Champ libelle="Nouveau mot de passe" aide="Au moins 8 caractères" type="password" value={f.nouveau} onChange={(e) => setF({ ...f, nouveau: e.target.value })} required />
+          <Champ libelle="Confirmation" type="password" value={f.confirmation} onChange={(e) => setF({ ...f, confirmation: e.target.value })} required />
+          <Message type="erreur">{erreur}</Message>
+          <div className="actions">
+            <button type="button" className="bouton secondaire" onClick={onFermer}>
+              Annuler
+            </button>
+            <button className="bouton">Changer</button>
+          </div>
+        </form>
+      )}
+    </Modale>
+  );
+}
+
 export function Coquille({ children }: { children: ReactNode }) {
   const { profil, poste, peut, deconnecter, verrouiller } = useSession();
+  const [monMotDePasse, setMonMotDePasse] = useState(false);
   const admin = [
     { chemin: '/utilisateurs', libelle: 'Utilisateurs', icone: 'utilisateurs', permission: PERMISSIONS.ADMIN_UTILISATEURS },
     { chemin: '/appareils', libelle: 'Appareils', icone: 'appareils', permission: PERMISSIONS.ADMIN_APPAREILS },
     { chemin: '/parametres', libelle: 'Paramètres', icone: 'parametres', permission: PERMISSIONS.ADMIN_PARAMETRES },
+    { chemin: '/sauvegardes', libelle: 'Sauvegardes', icone: 'sauvegarde', permission: PERMISSIONS.ADMIN_SAUVEGARDES },
     { chemin: '/journal', libelle: "Journal d'audit", icone: 'journal', permission: PERMISSIONS.AUDIT_VOIR },
   ].filter((l) => peut(l.permission));
 
@@ -73,7 +123,9 @@ export function Coquille({ children }: { children: ReactNode }) {
                 {libelleRole(profil?.permissions ?? [])}
               </div>
             </div>
-            <div className="avatar">{initiales(profil?.nomComplet ?? '?')}</div>
+            <button className="bouton discret" title="Mon mot de passe" onClick={() => setMonMotDePasse(true)} style={{ padding: 0 }}>
+              <div className="avatar">{initiales(profil?.nomComplet ?? '?')}</div>
+            </button>
             <button className="bouton discret" title="Verrouiller la session" onClick={verrouiller}>
               <Icone nom="verrou" />
             </button>
@@ -84,6 +136,7 @@ export function Coquille({ children }: { children: ReactNode }) {
         </header>
         <div className="page">{children}</div>
       </div>
+      {monMotDePasse && <MonMotDePasse onFermer={() => setMonMotDePasse(false)} />}
     </div>
   );
 }

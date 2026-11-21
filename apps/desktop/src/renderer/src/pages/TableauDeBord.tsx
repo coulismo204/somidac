@@ -11,12 +11,16 @@ interface Parametres {
 }
 
 export function TableauDeBord() {
-  const { profil, poste, appeler } = useSession();
+  const { profil, poste, appeler, peut } = useSession();
   const [p, setP] = useState<Parametres>();
+  const [alertesSauvegarde, setAlertesSauvegarde] = useState<string[]>([]);
 
   useEffect(() => {
     appeler<Parametres>('GET', '/parametres').then(setP).catch(() => undefined);
-  }, [appeler]);
+    if (peut('admin.sauvegardes')) {
+      appeler<{ alertes: string[] }>('GET', '/sauvegardes').then((e) => setAlertesSauvegarde(e.alertes)).catch(() => undefined);
+    }
+  }, [appeler, peut]);
 
   const heure = new Date().getHours();
   const salut = heure < 18 ? 'Bonjour' : 'Bonsoir';
@@ -31,6 +35,13 @@ export function TableauDeBord() {
           <p>{p?.raisonSociale ?? 'SOMIDAC SARL'} · {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(new Date())}</p>
         </div>
       </div>
+      {alertesSauvegarde.map((a) => (
+        <div key={a} style={{ marginBottom: 12 }}>
+          <Message type="attention">
+            {a} <a href="#/sauvegardes">Ouvrir les sauvegardes</a>
+          </Message>
+        </div>
+      ))}
       <div className="grille-cartes" style={{ marginBottom: 20 }}>
         <div className="carte indicateur">
           <div className="libelle">Ventes du jour</div>

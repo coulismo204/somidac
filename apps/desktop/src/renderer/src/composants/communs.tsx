@@ -80,6 +80,8 @@ const CHEMINS: Record<string, string> = {
   cle: 'M15 7a4 4 0 11-3.9 5H3v3h3v3h3v-3h2.1A4 4 0 0115 7z',
   bouclier: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
   copier: 'M8 8h12v12H8zM4 16V4h12',
+  sauvegarde: 'M5 3h11l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7',
+  cle2: 'M7 14a4 4 0 110-8 4 4 0 010 8zm3-4h11v3h-2v3h-3v-3h-6',
 };
 
 export function Icone({ nom, taille = 18 }: { nom: keyof typeof CHEMINS | string; taille?: number }) {

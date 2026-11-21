@@ -41,6 +41,13 @@ export const parametres = pgTable('parametres', {
   delaiAlertePeremptionJours: integer('delai_alerte_peremption_jours').notNull().default(90),
   nbMaxAppareils: integer('nb_max_appareils').notNull().default(5),
   modulesActifs: text('modules_actifs').array().notNull(),
+  /** Sauvegarde automatique quotidienne (§9) : heure « HH:MM » et dossiers de copie externes. */
+  sauvegardeHeure: text('sauvegarde_heure').notNull().default('20:00'),
+  sauvegardeDossiers: text('sauvegarde_dossiers').array().notNull().default([]),
+  /** Clé publique X25519 qui chiffre les sauvegardes (DER SPKI, base64). */
+  sauvegardeClePublique: text('sauvegarde_cle_publique'),
+  /** Clé privée correspondante, chiffrée par le mot de passe de restauration du gérant (JSON). */
+  sauvegardeClePriveeChiffree: text('sauvegarde_cle_privee_chiffree'),
   /** Vrai une fois le compte gérant et le poste principal créés. */
   initialise: boolean('initialise').notNull().default(false),
   modifieLe: horodatage('modifie_le').notNull().defaultNow(),
@@ -189,4 +196,26 @@ export const journalAudit = pgTable(
     hash: text('hash').notNull(),
   },
   (t) => [index('journal_audit_entite_idx').on(t.entite, t.entiteId), index('journal_audit_horodatage_idx').on(t.horodatage)],
+);
+
+export const statutSauvegarde = pgEnum('statut_sauvegarde', ['reussie', 'echouee']);
+
+/** Historique des sauvegardes et de leurs copies externes (§9). */
+export const sauvegardes = pgTable(
+  'sauvegardes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    creeLe: horodatage('cree_le').notNull().defaultNow(),
+    declenchement: text('declenchement').notNull(),
+    utilisateurId: uuid('utilisateur_id'),
+    statut: statutSauvegarde('statut').notNull(),
+    fichier: text('fichier'),
+    taille: integer('taille'),
+    empreinte: text('empreinte'),
+    /** Résultat de chaque copie externe : [{ dossier, ok, erreur? }]. */
+    copies: jsonb('copies').$type<{ dossier: string; ok: boolean; erreur?: string }[]>().notNull().default([]),
+    erreur: text('erreur'),
+    dureeMs: integer('duree_ms'),
+  },
+  (t) => [index('sauvegardes_cree_le_idx').on(t.creeLe)],
 );

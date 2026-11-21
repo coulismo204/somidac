@@ -7,6 +7,8 @@ import * as path from 'node:path';
  * - Windows (service installé) : chiffrement DPAPI lié au compte du service (§10.4).
  * - Développement : fichier protégé par les droits du système de fichiers.
  */
+export const COFFRE = Symbol('COFFRE');
+
 export interface Coffre {
   lire(nom: string): string | undefined;
   ecrire(nom: string, valeur: string): void;

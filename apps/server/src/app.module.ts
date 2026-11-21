@@ -1,19 +1,21 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { CONFIGURATION, Configuration } from './config/configuration';
 import { NoyauModule } from './noyau/noyau.module';
+import { Coffre, COFFRE } from './noyau/pki/coffre';
 import { Pki, PKI } from './noyau/pki/pki';
 
 @Global()
 @Module({})
 class ConfigurationModule {
-  static avec(config: Configuration, pki: Pki): DynamicModule {
+  static avec(config: Configuration, pki: Pki, coffre: Coffre): DynamicModule {
     return {
       module: ConfigurationModule,
       providers: [
         { provide: CONFIGURATION, useValue: config },
         { provide: PKI, useValue: pki },
+        { provide: COFFRE, useValue: coffre },
       ],
-      exports: [CONFIGURATION, PKI],
+      exports: [CONFIGURATION, PKI, COFFRE],
     };
   }
 }
@@ -25,10 +27,10 @@ class ConfigurationModule {
  */
 @Module({})
 export class AppModule {
-  static avec(config: Configuration, pki: Pki): DynamicModule {
+  static avec(config: Configuration, pki: Pki, coffre: Coffre): DynamicModule {
     return {
       module: AppModule,
-      imports: [ConfigurationModule.avec(config, pki), NoyauModule],
+      imports: [ConfigurationModule.avec(config, pki, coffre), NoyauModule],
     };
   }
 }

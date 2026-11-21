@@ -41,9 +41,15 @@ const LIBELLES: Record<string, string> = {
   'appareil.revoque': 'Appareil révoqué',
   'appareil.certificat_renouvele': 'Clé d’appareil renouvelée',
   'parametres.modifier': 'Paramètres modifiés',
+  'sauvegarde.configuree': 'Sauvegardes activées',
+  'sauvegarde.mot_de_passe_change': 'Mot de passe de restauration changé',
+  'sauvegarde.reglages_modifies': 'Réglages de sauvegarde modifiés',
+  'sauvegarde.faite': 'Sauvegarde faite',
+  'sauvegarde.echouee': 'Sauvegarde échouée',
+  'sauvegarde.restauree': 'Sauvegarde restaurée',
 };
 
-const SENSIBLES = /echec|refuse|bloque|revoque|annule/;
+const SENSIBLES = /echec|refuse|bloque|revoque|annule|restauree/;
 
 interface Nom {
   id: string;

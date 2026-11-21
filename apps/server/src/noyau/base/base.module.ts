@@ -14,8 +14,12 @@ import { InitialiserDonnees } from './donnees-initiales';
     {
       provide: POOL,
       inject: [CONFIGURATION],
-      useFactory: (config: Configuration) =>
-        new Pool({ connectionString: config.databaseUrl, max: 10, application_name: 'somidac-serveur' }),
+      useFactory: (config: Configuration) => {
+        const pool = new Pool({ connectionString: config.databaseUrl, max: 10, application_name: 'somidac-serveur' });
+        // Connexion inactive coupée (redémarrage de PostgreSQL, restauration) : elle est simplement remplacée.
+        pool.on('error', (e) => new Logger('Base').warn(`Connexion à la base perdue : ${e.message}`));
+        return pool;
+      },
     },
     {
       provide: DB,

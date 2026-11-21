@@ -7,8 +7,8 @@ import { after, describe, it } from 'node:test';
 import { CoffreFichier } from '../src/noyau/pki/coffre';
 import { ConfigService, demarrerService } from '../src/service/service';
 import { PostgresEmbarque } from '../src/service/postgres';
+import { PG_BIN } from './outils';
 
-const PG_BIN = process.env.SOMIDAC_TEST_PG_BIN ?? fs.readdirSync('/usr/lib/postgresql').sort().map((v) => `/usr/lib/postgresql/${v}/bin`).pop()!;
 
 async function sante(port: number) {
   const https = await import('node:https');

@@ -20,6 +20,18 @@ import { Configuration } from '../src/config/configuration';
 const webcrypto = crypto.webcrypto as unknown as Crypto;
 x509.cryptoProvider.set(webcrypto);
 
+// Pas de sauvegarde automatique pendant les tests.
+process.env.SOMIDAC_SAUVEGARDE_AUTO = '0';
+
+/** Outils PostgreSQL de la machine (pg_dump, pg_restore). */
+export const PG_BIN =
+  process.env.SOMIDAC_TEST_PG_BIN ??
+  fs
+    .readdirSync('/usr/lib/postgresql')
+    .sort((a, b) => Number(a) - Number(b))
+    .map((v) => `/usr/lib/postgresql/${v}/bin`)
+    .pop()!;
+
 export const URL_BASE_TEST =
   process.env.SOMIDAC_TEST_DATABASE_URL ?? 'postgres://somidac:somidac_dev@127.0.0.1:5433/somidac_test';
 
@@ -44,6 +56,7 @@ export async function sql<T = Record<string, unknown>>(texte: string, params: un
 export interface ServeurTest {
   app: INestApplication;
   port: number;
+  dataDir: string;
   caPem: string;
   arreter(): Promise<void>;
 }
@@ -56,6 +69,8 @@ export async function demarrerServeur(): Promise<ServeurTest> {
     port: 0,
     hoteEcoute: '127.0.0.1',
     version: 'test',
+    pgBin: PG_BIN,
+    sauvegardesDir: path.join(dataDir, 'sauvegardes'),
   };
   const { app, pki } = await creerApplication(config, {
     journaux: false,
@@ -66,6 +81,7 @@ export async function demarrerServeur(): Promise<ServeurTest> {
   return {
     app,
     port,
+    dataDir,
     caPem: pki.caPem,
     async arreter() {
       await app.close();
@@ -166,4 +182,26 @@ export function requete<T = any>(
     if (corps) req.write(corps);
     req.end();
   });
+}
+
+/** Initialise le serveur et connecte le gérant depuis le poste principal. */
+export async function initialiserAvecGerant(srv: ServeurTest, motDePasse = 'Somidac#2026') {
+  const poste = await nouvelleIdentite();
+  const init = await requete(srv, 'POST', '/initialisation', {
+    corps: { gerant: { identifiant: 'gerant', nomComplet: 'Gérant', motDePasse }, appareil: { nom: 'Poste principal', csrPem: poste.csrPem } },
+  });
+  if (init.statut !== 201) throw new Error(`initialisation : ${JSON.stringify(init.corps)}`);
+  poste.certificatPem = init.corps.certificatPem;
+  const c = await requete(srv, 'POST', '/auth/connexion', { appareil: poste, corps: { identifiant: 'gerant', motDePasse } });
+  return { poste, jeton: c.corps.jeton as string };
+}
+
+/** Enregistre un nouvel appareil (code d'activation + preuve) et le renvoie prêt à l'emploi. */
+export async function enregistrerAppareil(srv: ServeurTest, admin: { poste: IdentiteAppareil; jeton: string }, nom: string) {
+  const code = await requete(srv, 'POST', '/appareils', { appareil: admin.poste, jeton: admin.jeton, corps: { nom } });
+  const id = await nouvelleIdentite();
+  const { idCode, preuve } = preuveEnrolement(code.corps.codeActivation, id.csrPem);
+  const r = await requete(srv, 'POST', '/enrolement', { corps: { idCode, csrPem: id.csrPem, preuve } });
+  id.certificatPem = r.corps.certificatPem;
+  return { identite: id, id: code.corps.appareil.id as string };
 }

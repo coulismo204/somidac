@@ -147,3 +147,28 @@ export const parametresEntrepriseSchema = z.object({
   modulesActifs: z.array(z.string()),
 });
 export type ParametresEntrepriseDto = z.infer<typeof parametresEntrepriseSchema>;
+
+/** Sauvegardes (§9). */
+export const motDePasseRestaurationSchema = z.object({
+  motDePasse: z.string().min(10, 'Le mot de passe de restauration doit contenir au moins 10 caractères').max(128),
+  ancienMotDePasse: z.string().max(128).optional(),
+});
+export type MotDePasseRestaurationDto = z.infer<typeof motDePasseRestaurationSchema>;
+
+export const reglagesSauvegardeSchema = z.object({
+  heure: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Heure au format HH:MM'),
+  dossiers: z.array(z.string().trim().min(1).max(260)).max(5),
+});
+export type ReglagesSauvegardeDto = z.infer<typeof reglagesSauvegardeSchema>;
+
+export const choixSauvegardeSchema = z.object({
+  nom: z.string().min(1).max(120),
+  dossier: z.string().min(1).max(260),
+  motDePasse: z.string().min(1).max(128),
+});
+export type ChoixSauvegardeDto = z.infer<typeof choixSauvegardeSchema>;
+
+export const restaurationSchema = choixSauvegardeSchema.extend({
+  confirmation: z.literal('RESTAURER', { message: 'Tapez RESTAURER pour confirmer' }),
+});
+export type RestaurationDto = z.infer<typeof restaurationSchema>;
