@@ -9,27 +9,30 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
-    "test": "tsc -p tsconfig.test.json && SOMIDAC_MIGRATIONS_DIR=../server/drizzle node --test --test-concurrency=1 dist-test/apps/desktop/test/"
+    "test": "tsc -p tsconfig.test.json && SOMIDAC_MIGRATIONS_DIR=../server/drizzle node --test --test-concurrency=1 dist-test/apps/desktop/test/",
+    "installateur:principal": "electron-builder --win --x64 -c electron-builder.principal.yml --publish never",
+    "installateur:poste": "electron-builder --win --x64 -c electron-builder.poste.yml --publish never"
   },
   "devDependencies": {
+    "@peculiar/x509": "^3.1.0",
+    "@somidac/shared": "^0.1.0",
     "@types/node": "^22.20.5",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
     "electron": "^45.4.1",
+    "electron-builder": "^26.18.0",
     "electron-vite": "^6.0.0",
-    "typescript": "~6.0.3",
-    "vite": "^8.3.8"
-  },
-  "dependencies": {
-    "@peculiar/x509": "^3.1.0",
-    "@somidac/shared": "^0.1.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router": "^7.18.6",
     "reflect-metadata": "^0.2.2",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.8",
     "zod": "^4.6.7"
-  }
+  },
+  "author": "SOMIDAC SARL",
+  "homepage": "https://github.com/coulismo204/somidac"
 }

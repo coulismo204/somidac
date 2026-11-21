@@ -5,6 +5,7 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { Coffre, CoffreFichier } from './coffre';
 
 const webcrypto = crypto.webcrypto as unknown as Crypto;
 x509.cryptoProvider.set(webcrypto);
@@ -34,10 +35,14 @@ export class Pki {
   }
 
   /** Charge l'autorité depuis le dossier de données, ou la crée au premier démarrage. */
-  static async charger(dataDir: string, nomsServeur: NomsServeur = nomsServeurParDefaut()): Promise<Pki> {
+  static async charger(
+    dataDir: string,
+    nomsServeur: NomsServeur = nomsServeurParDefaut(),
+    coffre: Coffre = new CoffreFichier(dataDir),
+  ): Promise<Pki> {
     const dossier = path.join(dataDir, 'pki');
     fs.mkdirSync(dossier, { recursive: true, mode: 0o700 });
-    const secret = lireOuCreerSecret(dataDir);
+    const secret = lireOuCreerSecret(coffre);
 
     const fichierCaCle = path.join(dossier, 'autorite.key.pem');
     const fichierCaCert = path.join(dossier, 'autorite.cert.pem');
@@ -157,13 +162,13 @@ interface SecretServeur {
   motDePasseCleAutorite: string;
 }
 
-function lireOuCreerSecret(dataDir: string): SecretServeur {
-  const fichier = path.join(dataDir, 'secrets.json');
-  if (fs.existsSync(fichier)) return JSON.parse(fs.readFileSync(fichier, 'utf8')) as SecretServeur;
-  const secret: SecretServeur = { motDePasseCleAutorite: crypto.randomBytes(32).toString('base64url') };
-  fs.mkdirSync(dataDir, { recursive: true, mode: 0o700 });
-  ecrireFichierPrive(fichier, JSON.stringify(secret, null, 2));
-  return secret;
+function lireOuCreerSecret(coffre: Coffre): SecretServeur {
+  let motDePasseCleAutorite = coffre.lire('motDePasseCleAutorite');
+  if (!motDePasseCleAutorite) {
+    motDePasseCleAutorite = crypto.randomBytes(32).toString('base64url');
+    coffre.ecrire('motDePasseCleAutorite', motDePasseCleAutorite);
+  }
+  return { motDePasseCleAutorite };
 }
 
 function ecrireFichierPrive(fichier: string, contenu: string) {

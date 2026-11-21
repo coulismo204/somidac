@@ -1,0 +1,38 @@
+# Installateur du poste principal : application + serveur + PostgreSQL + service Windows.
+appId: com.somidac.gestion
+productName: SOMIDAC
+executableName: SOMIDAC
+copyright: Copyright © SOMIDAC SARL
+directories:
+  output: release/principal
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+asar: true
+npmRebuild: false
+extraResources:
+  - from: ressources-windows/serveur
+    to: serveur
+  - from: ressources-windows/postgresql
+    to: postgresql
+  - from: ressources-windows/service
+    to: service
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+  artifactName: SOMIDAC-Poste-principal-${version}-Setup.${ext}
+nsis:
+  oneClick: false
+  perMachine: true
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: SOMIDAC
+  deleteAppDataOnUninstall: false
+  installerLanguages: [fr_FR]
+  language: "1036"
+  include: installateur/principal.nsh

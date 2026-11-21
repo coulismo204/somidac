@@ -3,14 +3,15 @@ import { INestApplication, NestApplicationOptions } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Configuration } from './config/configuration';
+import { Coffre } from './noyau/pki/coffre';
 import { NomsServeur, Pki } from './noyau/pki/pki';
 
 /** Crée l'application HTTPS avec authentification mutuelle des appareils (TLS mutuel, §10.1). */
 export async function creerApplication(
   config: Configuration,
-  options: { nomsServeur?: NomsServeur; journaux?: boolean } = {},
+  options: { nomsServeur?: NomsServeur; journaux?: boolean; coffre?: Coffre } = {},
 ): Promise<{ app: INestApplication; pki: Pki }> {
-  const pki = await Pki.charger(config.dataDir, options.nomsServeur);
+  const pki = await Pki.charger(config.dataDir, options.nomsServeur, options.coffre);
   const app = await NestFactory.create(AppModule.avec(config, pki), {
     logger: options.journaux === false ? false : ['log', 'warn', 'error'],
     httpsOptions: {

@@ -11,3 +11,7 @@ release/
 coverage/
 *.log
 .DS_Store
+apps/desktop/ressources-windows/
+apps/desktop/release/
+apps/server/paquet/
+.cache/

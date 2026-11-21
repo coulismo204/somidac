@@ -1,0 +1,39 @@
+<!--
+  Service Windows « SOMIDAC Serveur » (WinSW) : installé uniquement sur le poste principal.
+  %BASE% = dossier de ce fichier : <installation>\resources\service
+-->
+<service>
+  <id>SOMIDAC-Serveur</id>
+  <name>SOMIDAC Serveur</name>
+  <description>Base de données et serveur de l'application de gestion SOMIDAC. Doit rester démarré pour que les postes travaillent.</description>
+
+  <!-- Le Node.js intégré à l'application exécute le serveur. -->
+  <executable>%BASE%\..\..\SOMIDAC.exe</executable>
+  <arguments>"%BASE%\..\serveur\service.js"</arguments>
+  <env name="ELECTRON_RUN_AS_NODE" value="1"/>
+  <env name="SOMIDAC_PROGRAMDATA" value="%ProgramData%\SOMIDAC"/>
+  <env name="SOMIDAC_PG_BIN" value="%BASE%\..\postgresql\bin"/>
+  <env name="SOMIDAC_PORT" value="7443"/>
+  <env name="SOMIDAC_PG_PORT" value="5433"/>
+
+  <!-- Compte sans droits d'administration : PostgreSQL refuse de tourner en administrateur,
+       et les secrets chiffrés par DPAPI ne sont lisibles que par ce compte. -->
+  <serviceaccount>
+    <domain>NT AUTHORITY</domain>
+    <user>NetworkService</user>
+  </serviceaccount>
+
+  <startmode>Automatic</startmode>
+  <delayedAutoStart/>
+  <stoptimeout>60 sec</stoptimeout>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="30 sec"/>
+  <onfailure action="restart" delay="60 sec"/>
+  <resetfailure>1 hour</resetfailure>
+
+  <logpath>%ProgramData%\SOMIDAC\journaux</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>8</keepFiles>
+  </log>
+</service>

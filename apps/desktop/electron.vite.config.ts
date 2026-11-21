@@ -7,13 +7,14 @@ const shared = resolve(process.cwd(), '../../packages/shared/src/index.ts');
 const alias = { '@somidac/shared': shared };
 
 export default defineConfig({
+  // Tout est intégré dans out/ (aucun node_modules dans l'installateur).
   main: {
     resolve: { alias },
-    build: { externalizeDeps: { exclude: ['@somidac/shared'] } },
+    build: { externalizeDeps: false },
   },
   preload: {
     resolve: { alias },
-    build: { externalizeDeps: { exclude: ['@somidac/shared'] } },
+    build: { externalizeDeps: false },
   },
   renderer: {
     resolve: { alias },
