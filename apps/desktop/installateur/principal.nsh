@@ -10,8 +10,10 @@
 ; arrêter le service, qui utilise SOMIDAC.exe, puis vérifier que l'application n'est pas ouverte.
 ; (Vérification écrite ici car celle d'electron-builder n'est plus disponible dès qu'on la personnalise.)
 !macro customCheckAppRunning
-  nsExec::Exec 'net stop ${SOMIDAC_SERVICE}'
+  ; $CmdPath et $PowerShellPath sont préparées par electron-builder (CHECK_APP_RUNNING).
+  nsExec::Exec '"$CmdPath" /c net stop ${SOMIDAC_SERVICE}'
   Pop $R0
+  StrCpy $R1 "$PowerShellPath"
   Sleep 1500
   ${Do}
     ${nsProcess::FindProcess} "${APP_EXECUTABLE_FILENAME}" $R0

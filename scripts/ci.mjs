@@ -19,7 +19,7 @@ enfant.on('close', (code) => {
     const nettoyer = (l) => l.replace(/\x1b\[[0-9;]*m/g, '');
     const utiles = lignes.map(nettoyer).filter((l) => l.trim());
     // Les lignes d'erreur d'abord (tests en échec, exceptions), puis la fin brute.
-    const erreurs = utiles.filter((l) => /✖|error|erreur|Error|failed|ÉCHEC|not ok|assert/i.test(l)).slice(-40);
+    const erreurs = utiles.filter((l) => /✖|error|erreur|warning|avertissement|failed|ÉCHEC|not ok|assert/i.test(l)).slice(-40);
     const fin = utiles.slice(-40);
     const echapper = (t) => t.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
     console.log(`::error title=${titre} (erreurs)::${echapper(erreurs.join('\n').slice(-6000))}`);
