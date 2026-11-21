@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -25,16 +25,16 @@ jobs:
       - name: Base PostgreSQL de test
         run: bash scripts/dev-db.sh start
       - run: npm run typecheck -w @somidac/desktop
-      - run: npm test -w @somidac/server
-      - run: npm test -w @somidac/desktop
+      - run: node scripts/ci.mjs "Tests serveur" npm test -w @somidac/server
+      - run: node scripts/ci.mjs "Tests poste" npm test -w @somidac/desktop
 
   windows:
     name: Installateurs Windows
     runs-on: windows-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -46,14 +46,14 @@ jobs:
       - run: npm ci
       - run: npm run build -w @somidac/shared
       - name: Serveur empaqueté
-        run: npm run empaqueter -w @somidac/server -- ../desktop/ressources-windows/serveur
+        run: node scripts/ci.mjs "Empaquetage serveur" npm run empaqueter -w @somidac/server -- ../desktop/ressources-windows/serveur
       - name: Composants Windows
-        run: node scripts/preparer-windows.mjs apps/desktop/ressources-windows
+        run: node scripts/ci.mjs "Composants Windows" node scripts/preparer-windows.mjs apps/desktop/ressources-windows
       - run: npm run build -w @somidac/desktop
       - name: Installateur du poste principal
-        run: npm run installateur:principal -w @somidac/desktop
+        run: node scripts/ci.mjs "Installateur principal" npm run installateur:principal -w @somidac/desktop
       - name: Installateur des postes secondaires
-        run: npm run installateur:poste -w @somidac/desktop
+        run: node scripts/ci.mjs "Installateur poste" npm run installateur:poste -w @somidac/desktop
 
       - name: Test réel — installation silencieuse du poste principal
         shell: pwsh
