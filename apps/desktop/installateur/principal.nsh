@@ -33,6 +33,13 @@
   CreateDirectory "$R2\SOMIDAC"
   nsExec::ExecToLog 'icacls "$R2\SOMIDAC" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-20:(OI)(CI)M /T /C /Q'
 
+  ; Bibliothèques Visual C++ de Microsoft, indispensables à PostgreSQL (souvent absentes d'un Windows de bureau).
+  ; Codes de retour acceptés : 0 (installé), 1638 (version plus récente déjà présente), 3010 (redémarrage conseillé).
+  DetailPrint "Installation des bibliothèques Visual C++ (Microsoft)…"
+  nsExec::ExecToLog '"$INSTDIR\resources\vcredist\VC_redist.x64.exe" /install /quiet /norestart'
+  Pop $R3
+  DetailPrint "Visual C++ : code $R3"
+
   ; Service Windows (démarrage automatique, redémarrage en cas d'échec).
   nsExec::ExecToLog '"$INSTDIR\resources\service\SOMIDAC-Serveur.exe" install'
   nsExec::ExecToLog '"$INSTDIR\resources\service\SOMIDAC-Serveur.exe" start'

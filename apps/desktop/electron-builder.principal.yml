@@ -19,6 +19,8 @@ extraResources:
     to: postgresql
   - from: ressources-windows/service
     to: service
+  - from: ressources-windows/vcredist
+    to: vcredist
 win:
   target:
     - target: nsis

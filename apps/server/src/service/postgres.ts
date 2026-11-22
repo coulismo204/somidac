@@ -31,7 +31,13 @@ export class PostgresEmbarque {
 
   private executer(nom: string, args: string[], delaiMs = 120_000) {
     const r = spawnSync(this.outil(nom), args, { encoding: 'utf8', windowsHide: true, timeout: delaiMs });
-    return { code: r.status ?? -1, sortie: `${r.stdout ?? ''}${r.stderr ?? ''}${r.error ? r.error.message : ''}` };
+    let sortie = `${r.stdout ?? ''}${r.stderr ?? ''}${r.error ? r.error.message : ''}`;
+    // 0xC0000135 : une DLL manque (le plus souvent les bibliothèques Visual C++ de Microsoft).
+    if (r.status === 3221225781 || r.status === -1073741515) {
+      sortie = `${nom} ne peut pas démarrer : bibliothèque Windows manquante (Visual C++). ` +
+        'Installez « Microsoft Visual C++ Redistributable x64 » (https://aka.ms/vs/17/release/vc_redist.x64.exe). ' + sortie;
+    }
+    return { code: r.status ?? -1, sortie };
   }
 
   get initialisee(): boolean {
