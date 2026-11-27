@@ -1,5 +1,5 @@
 import { LIBELLES_PERMISSIONS, PERMISSIONS, ROLES_PAR_DEFAUT } from '@somidac/shared';
-import { FormEvent, ReactNode, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useState } from 'react';
 import { NavLink } from 'react-router';
 import { useSession } from '../contexte';
 import { initiales } from '../format';
@@ -8,13 +8,13 @@ import { messageErreur } from '../contexte';
 import { Champ, Icone, Message, Modale } from './communs';
 
 /** Modules métier : ils apparaissent au fil des lots (cahier des charges §11). */
-const MODULES_METIER = [
-  { chemin: '/produits', libelle: 'Produits', icone: 'produits', lot: 2 },
-  { chemin: '/stock', libelle: 'Stock', icone: 'stock', lot: 2 },
-  { chemin: '/achats', libelle: 'Achats', icone: 'achats', lot: 2 },
-  { chemin: '/ventes', libelle: 'Ventes', icone: 'ventes', lot: 3 },
-  { chemin: '/tresorerie', libelle: 'Trésorerie', icone: 'tresorerie', lot: 4 },
-  { chemin: '/rapports', libelle: 'Rapports', icone: 'rapports', lot: 5 },
+const MODULES_METIER: { chemin: string; libelle: string; icone: string; module: string; lot?: number; permission?: string }[] = [
+  { chemin: '/produits', libelle: 'Produits', icone: 'produits', module: 'produits' },
+  { chemin: '/stock', libelle: 'Stock', icone: 'stock', module: 'stock' },
+  { chemin: '/achats', libelle: 'Achats', icone: 'achats', module: 'achats', permission: 'achats.saisir' },
+  { chemin: '/ventes', libelle: 'Ventes', icone: 'ventes', module: 'ventes', lot: 3 },
+  { chemin: '/tresorerie', libelle: 'Trésorerie', icone: 'tresorerie', module: 'tresorerie', lot: 4 },
+  { chemin: '/rapports', libelle: 'Rapports', icone: 'rapports', module: 'rapports', lot: 5 },
 ];
 
 function libelleRole(permissions: string[]): string {
@@ -72,6 +72,12 @@ function MonMotDePasse({ onFermer }: { onFermer: () => void }) {
 export function Coquille({ children }: { children: ReactNode }) {
   const { profil, poste, peut, deconnecter, verrouiller } = useSession();
   const [monMotDePasse, setMonMotDePasse] = useState(false);
+  const { appeler } = useSession();
+  const [modulesActifs, setModulesActifs] = useState<string[]>();
+  useEffect(() => {
+    appeler<{ modulesActifs: string[] }>('GET', '/parametres').then((p) => setModulesActifs(p.modulesActifs)).catch(() => undefined);
+  }, [appeler]);
+  const modulesVisibles = MODULES_METIER.filter((m) => (!modulesActifs || modulesActifs.includes(m.module)) && (!m.permission || peut(m.permission)));
   const admin = [
     { chemin: '/utilisateurs', libelle: 'Utilisateurs', icone: 'utilisateurs', permission: PERMISSIONS.ADMIN_UTILISATEURS },
     { chemin: '/appareils', libelle: 'Appareils', icone: 'appareils', permission: PERMISSIONS.ADMIN_APPAREILS },
@@ -95,10 +101,10 @@ export function Coquille({ children }: { children: ReactNode }) {
             <Icone nom="tableau" /> Tableau de bord
           </NavLink>
           <div className="titre-groupe">Activité</div>
-          {MODULES_METIER.map((m) => (
+          {modulesVisibles.map((m) => (
             <NavLink key={m.chemin} to={m.chemin}>
               <Icone nom={m.icone} /> {m.libelle}
-              <span className="badge-lot">lot {m.lot}</span>
+              {m.lot && <span className="badge-lot">lot {m.lot}</span>}
             </NavLink>
           ))}
           {admin.length > 0 && <div className="titre-groupe">Administration</div>}

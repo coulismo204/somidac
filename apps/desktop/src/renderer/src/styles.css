@@ -229,3 +229,20 @@ table.tableau { width: 100%; border-collapse: collapse; }
 .toggle-module:last-child { border-bottom: none; }
 .toggle-module small { color: var(--texte-3); display: block; }
 .mono { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 12px; }
+
+/* ---------- Lot 2 : listes, onglets, éditeurs ---------- */
+.barre-outils { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.barre-outils .recherche { flex: 1; min-width: 240px; height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surface); }
+.barre-outils select { height: 40px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surface); }
+.onglets { display: flex; gap: 4px; border-bottom: 1px solid var(--bord); margin-bottom: 18px; }
+.onglets button { background: none; border: none; padding: 10px 14px; cursor: pointer; color: var(--texte-2); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.onglets button.actif { color: var(--bleu); border-bottom-color: var(--or); }
+.nombre { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tableau tr.cliquable { cursor: pointer; }
+.tableau input, .tableau select { height: 34px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--bord); background: var(--surface); width: 100%; }
+.tableau input.nombre { text-align: right; }
+.tableau td.serre { padding: 6px 8px; }
+.totaux { display: grid; grid-template-columns: auto auto; gap: 6px 24px; justify-content: end; padding: 16px 20px; font-variant-numeric: tabular-nums; }
+.totaux .total { font-weight: 700; font-size: 16px; color: var(--bleu-nuit); }
+.sous-ligne { background: #fafbfe; }
+.sous-ligne td { font-size: 12px; color: var(--texte-2); padding-top: 6px; padding-bottom: 6px; }

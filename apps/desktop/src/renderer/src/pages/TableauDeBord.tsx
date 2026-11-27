@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Message } from '../composants/communs';
 import { useSession } from '../contexte';
-import { formaterDate } from '../format';
+import { formaterDate, formaterMontant } from '../format';
 
 interface Parametres {
   raisonSociale: string;
@@ -14,9 +14,13 @@ export function TableauDeBord() {
   const { profil, poste, appeler, peut } = useSession();
   const [p, setP] = useState<Parametres>();
   const [alertesSauvegarde, setAlertesSauvegarde] = useState<string[]>([]);
+  const [stock, setStock] = useState<{ stockBas: number; lotsBientotPerimes: number; lotsPerimes: number; valeurTotale?: number }>();
 
   useEffect(() => {
     appeler<Parametres>('GET', '/parametres').then(setP).catch(() => undefined);
+    appeler<{ resume: { stockBas: number; lotsBientotPerimes: number; lotsPerimes: number; valeurTotale?: number } }>('GET', '/stock')
+      .then((e) => setStock(e.resume))
+      .catch(() => undefined);
     if (peut('admin.sauvegardes')) {
       appeler<{ alertes: string[] }>('GET', '/sauvegardes').then((e) => setAlertesSauvegarde(e.alertes)).catch(() => undefined);
     }
@@ -48,11 +52,14 @@ export function TableauDeBord() {
           <div className="valeur">—</div>
           <div className="detail">Disponible avec le module Ventes (lot 3)</div>
         </div>
-        <div className="carte indicateur">
+        <a className="carte indicateur" href="#/stock" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="libelle">Stock bas</div>
-          <div className="valeur">—</div>
-          <div className="detail">Disponible avec le module Stock (lot 2)</div>
-        </div>
+          <div className="valeur" style={{ color: stock?.stockBas ? 'var(--alerte)' : undefined }}>{stock ? stock.stockBas : '—'}</div>
+          <div className="detail">
+            {stock ? `${stock.lotsBientotPerimes} lot(s) à écouler, ${stock.lotsPerimes} périmé(s)` : 'Module Stock désactivé'}
+            {stock?.valeurTotale !== undefined ? ` · valeur ${formaterMontant(stock.valeurTotale)}` : ''}
+          </div>
+        </a>
         <div className="carte indicateur">
           <div className="libelle">Trésorerie</div>
           <div className="valeur">—</div>
@@ -65,8 +72,8 @@ export function TableauDeBord() {
         </div>
       </div>
       <Message type="info">
-        Le socle de l'application est en place : comptes, rôles, appareils enregistrés par clé chiffrée, paramètres et
-        journal d'audit. Les modules Produits, Stock et Achats arrivent au lot 2.
+        Produits, achats et stock sont disponibles. Les ventes (bons de livraison et factures) arrivent au lot 3, la
+        trésorerie au lot 4.
       </Message>
     </>
   );

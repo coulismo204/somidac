@@ -8,6 +8,9 @@ import { rechercherPostesPrincipaux } from './poste/decouverte';
 import { ErreurReseau } from './poste/https';
 import { Chiffreur, ErreurPoste, Poste, PORT_SERVEUR_PAR_DEFAUT } from './poste/poste';
 
+// Interface en français, y compris les champs de date (JJ/MM/AAAA).
+app.commandLine.appendSwitch('lang', 'fr-FR');
+
 const enDeveloppement = !app.isPackaged;
 const urlDev = process.env.ELECTRON_RENDERER_URL;
 

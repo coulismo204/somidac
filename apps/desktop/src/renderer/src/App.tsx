@@ -12,7 +12,10 @@ import { AppareilRevoque } from './pages/AppareilRevoque';
 import { ChangementMotDePasse } from './pages/ChangementMotDePasse';
 import { Configuration } from './pages/configuration/Configuration';
 import { Connexion } from './pages/Connexion';
+import { Achats } from './pages/achats/Achats';
 import { ModuleAVenir } from './pages/ModuleAVenir';
+import { Produits } from './pages/produits/Produits';
+import { Stock } from './pages/stock/Stock';
 import { TableauDeBord } from './pages/TableauDeBord';
 import { Verrouillage } from './pages/Verrouillage';
 
@@ -58,9 +61,9 @@ export function App() {
       <Coquille>
         <Routes>
           <Route path="/" element={<TableauDeBord />} />
-          <Route path="/produits" element={<ModuleAVenir titre="Produits" lot={2} description="Catalogue, codes-barres, conditionnements et prix par client." />} />
-          <Route path="/stock" element={<ModuleAVenir titre="Stock" lot={2} description="Mouvements, lots, dates de péremption et inventaires." />} />
-          <Route path="/achats" element={<ModuleAVenir titre="Achats" lot={2} description="Fournisseurs, achats et frais d'approche." />} />
+          <Route path="/produits" element={<Produits />} />
+          <Route path="/stock" element={<Stock />} />
+          <Route path="/achats" element={<Autorise permission={PERMISSIONS.ACHATS_SAISIR}><Achats /></Autorise>} />
           <Route path="/ventes" element={<ModuleAVenir titre="Ventes" lot={3} description="Clients, bons de livraison, factures et avoirs." />} />
           <Route path="/tresorerie" element={<ModuleAVenir titre="Trésorerie" lot={4} description="Encaissements, dépenses et clôture de caisse." />} />
           <Route path="/rapports" element={<ModuleAVenir titre="Rapports" lot={5} description="Ventes, marges, stock valorisé et résultat du mois." />} />
