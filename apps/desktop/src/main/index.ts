@@ -1,9 +1,10 @@
 import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, Menu, safeStorage, session, shell } from 'electron';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { CANAUX, EtatServeurLocal, Resultat } from '../commun/ipc';
+import { rechercherPostesPrincipaux } from './poste/decouverte';
 import { ErreurReseau } from './poste/https';
 import { Chiffreur, ErreurPoste, Poste, PORT_SERVEUR_PAR_DEFAUT } from './poste/poste';
 
@@ -46,6 +47,34 @@ async function diagnosticServeurLocal(): Promise<EtatServeurLocal> {
   return { joignable, initialise, installeAvecServeur, service: etatServiceWindows() };
 }
 
+/**
+ * Fait de ce PC le poste principal : démarre le service et ouvre le pare-feu au réseau privé.
+ * Windows demande une fois l'autorisation administrateur (UAC). En développement, le serveur
+ * est lancé à la main : rien à faire.
+ */
+function activerPostePrincipal(): Promise<void> {
+  if (!app.isPackaged || process.platform !== 'win32') return Promise.resolve();
+  const script = path.join(process.resourcesPath, 'service', 'activer-poste-principal.cmd');
+  if (!fs.existsSync(script)) {
+    return Promise.reject(new ErreurPoste('ACTIVATION_IMPOSSIBLE', "Le serveur SOMIDAC n'est pas installé sur ce PC."));
+  }
+  const commande = `Start-Process -FilePath "$env:ComSpec" -ArgumentList '/c', '"${script.replace(/'/g, "''")}"' -Verb RunAs -Wait -WindowStyle Hidden`;
+  return new Promise((resolve, reject) => {
+    const p = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', commande], { windowsHide: true });
+    p.on('error', () => reject(new ErreurPoste('ACTIVATION_IMPOSSIBLE', "Impossible de demander l'autorisation administrateur.")));
+    p.on('exit', (code) =>
+      code === 0
+        ? resolve()
+        : reject(
+            new ErreurPoste(
+              'ELEVATION_REFUSEE',
+              "L'autorisation administrateur a été refusée : ce PC ne peut pas devenir le poste principal sans elle.",
+            ),
+          ),
+    );
+  });
+}
+
 /** Seuls nos propres écrans peuvent appeler le processus principal. */
 function origineAutorisee(evenement: IpcMainInvokeEvent): boolean {
   const url = evenement.senderFrame?.url ?? '';
@@ -71,6 +100,8 @@ function enregistrerCanaux() {
   gerer(CANAUX.ETAT, () => poste.etat());
   gerer(CANAUX.SERVEUR_LOCAL, () => diagnosticServeurLocal());
   gerer(CANAUX.ADRESSES, () => adressesReseau());
+  gerer(CANAUX.RECHERCHER, () => rechercherPostesPrincipaux());
+  gerer(CANAUX.ACTIVER_PRINCIPAL, () => activerPostePrincipal());
   gerer(CANAUX.INITIALISER, (donnees: Parameters<Poste['initialiserPostePrincipal']>[0]) =>
     poste.initialiserPostePrincipal({ ...donnees, port: PORT_SERVEUR_PAR_DEFAUT }),
   );

@@ -1,23 +1,33 @@
-# Installateur des postes secondaires : l'application seule (le serveur est sur le poste principal).
+# Installateur unique, pour tous les PC : application + serveur + PostgreSQL + service Windows (à l'arrêt).
+# Au premier lancement, le PC rejoint le poste principal trouvé sur le Wi-Fi, ou en devient un.
 appId: com.somidac.gestion
 electronVersion: 45.4.1
 productName: SOMIDAC
 executableName: SOMIDAC
 copyright: Copyright © SOMIDAC SARL
 directories:
-  output: release/poste
+  output: release
   buildResources: build
 files:
   - out/**/*
   - package.json
 asar: true
 npmRebuild: false
+extraResources:
+  - from: ressources-windows/serveur
+    to: serveur
+  - from: ressources-windows/postgresql
+    to: postgresql
+  - from: ressources-windows/service
+    to: service
+  - from: ressources-windows/vcredist
+    to: vcredist
 win:
   target:
     - target: nsis
       arch: [x64]
   icon: build/icon.ico
-  artifactName: SOMIDAC-Poste-${version}-Setup.${ext}
+  artifactName: SOMIDAC-${version}-Setup.${ext}
 nsis:
   oneClick: false
   perMachine: true
@@ -29,3 +39,4 @@ nsis:
   deleteAppDataOnUninstall: false
   installerLanguages: [fr_FR]
   language: "1036"
+  include: installateur/installateur.nsh

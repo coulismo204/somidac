@@ -1,3 +1,4 @@
+import { PORT_DECOUVERTE } from '@somidac/shared';
 import * as path from 'node:path';
 
 export interface Configuration {
@@ -11,6 +12,8 @@ export interface Configuration {
   pgBin?: string;
   /** Dossier local des sauvegardes. */
   sauvegardesDir: string;
+  /** Port UDP de découverte sur le réseau local (0 = désactivée). */
+  portDecouverte: number;
 }
 
 export const CONFIGURATION = Symbol('CONFIGURATION');
@@ -32,6 +35,7 @@ export function chargerConfiguration(env: NodeJS.ProcessEnv = process.env): Conf
     sauvegardesDir: path.resolve(env.SOMIDAC_SAUVEGARDES_DIR ?? path.join(dataDir, 'sauvegardes')),
     port,
     hoteEcoute: env.SOMIDAC_HOTE ?? '0.0.0.0',
+    portDecouverte: Number(env.SOMIDAC_PORT_DECOUVERTE ?? PORT_DECOUVERTE),
     version: env.npm_package_version ?? '0.1.0',
   };
 }

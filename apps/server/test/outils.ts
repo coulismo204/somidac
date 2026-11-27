@@ -70,6 +70,7 @@ export async function demarrerServeur(): Promise<ServeurTest> {
     hoteEcoute: '127.0.0.1',
     version: 'test',
     pgBin: PG_BIN,
+    portDecouverte: 0,
     sauvegardesDir: path.join(dataDir, 'sauvegardes'),
   };
   const { app, pki } = await creerApplication(config, {

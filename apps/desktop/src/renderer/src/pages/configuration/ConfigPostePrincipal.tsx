@@ -100,7 +100,7 @@ export function ConfigPostePrincipal({ onRetour }: { onRetour: () => void }) {
 }
 
 /** Le serveur est déjà initialisé mais ce PC n'a pas (ou plus) sa clé : le gérant le réenregistre. */
-function ReenregistrementPostePrincipal({ onRetour }: { onRetour: () => void }) {
+export function ReenregistrementPostePrincipal({ onRetour }: { onRetour: () => void }) {
   const { rafraichirPoste } = useSession();
   const [f, setF] = useState({ identifiant: '', motDePasse: '', nomPoste: 'Poste principal' });
   const [erreur, setErreur] = useState<string>();
@@ -156,10 +156,8 @@ function DiagnosticServeur({ etat }: { etat: EtatServeurLocal }) {
   if (!etat.installeAvecServeur) {
     return (
       <Message type="erreur">
-        Cet ordinateur a été installé avec l'installateur des <strong>postes secondaires</strong> : il ne contient pas le
-        serveur. Pour en faire le poste principal, désinstallez SOMIDAC puis installez{' '}
-        <strong>SOMIDAC-Poste-principal-…-Setup.exe</strong> (clic droit → Exécuter en tant qu'administrateur). Sinon,
-        revenez en arrière et choisissez « Poste secondaire ».
+        Cette installation ne contient pas le serveur (ancienne version de SOMIDAC). Désinstallez SOMIDAC puis installez
+        la dernière version (<strong>SOMIDAC-…-Setup.exe</strong>, clic droit → Exécuter en tant qu'administrateur).
       </Message>
     );
   }
@@ -167,8 +165,8 @@ function DiagnosticServeur({ etat }: { etat: EtatServeurLocal }) {
     case 'absent':
       return (
         <Message type="erreur">
-          Le service « SOMIDAC Serveur » n'est pas installé. Relancez l'installateur du poste principal en tant
-          qu'administrateur.
+          Le service « SOMIDAC Serveur » n'est pas installé. Réinstallez SOMIDAC (clic droit sur l'installateur →
+          Exécuter en tant qu'administrateur).
         </Message>
       );
     case 'demarrage':

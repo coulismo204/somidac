@@ -3,6 +3,7 @@ import { AppareilsModule } from './appareils/appareils.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { BaseModule } from './base/base.module';
+import { DecouverteModule } from './decouverte/decouverte.module';
 import { InitialisationModule } from './initialisation/initialisation.module';
 import { ParametresModule } from './parametres/parametres.module';
 import { SanteController } from './sante/sante.controller';
@@ -25,6 +26,7 @@ import { UtilisateursModule } from './utilisateurs/utilisateurs.module';
     UtilisateursModule,
     InitialisationModule,
     SauvegardesModule,
+    DecouverteModule,
   ],
   controllers: [SanteController],
 })

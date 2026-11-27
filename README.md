@@ -56,10 +56,17 @@ Repartir d'une base vide : `bash scripts/dev-db.sh reset && rm -rf .dev/serveur`
 
 Nouvelle migration après modification du schéma : `npm run db:generate -w @somidac/server`.
 
-## Installateurs Windows
+## Installateur Windows
 
-Construits par GitHub Actions à chaque envoi sur `main` (onglet **Actions → Intégration continue →
-Artifacts**) : `SOMIDAC-Poste-principal-*-Setup.exe` (application + serveur + PostgreSQL + service
-Windows) et `SOMIDAC-Poste-*-Setup.exe` (postes secondaires). La CI installe réellement le poste
-principal sur Windows et vérifie le service, le chiffrement DPAPI, l'écoute locale de la base et la
-désinstallation.
+Un **seul installateur** pour tous les PC : `SOMIDAC-<version>-Setup.exe` (application, serveur, PostgreSQL,
+bibliothèques Visual C++ et service Windows installé à l'arrêt). Fabrication : `npm run installateur -w @somidac/desktop`
+(sous Linux, Wine est nécessaire), ou par la CI (onglet **Actions → Intégration continue → Artifacts**).
+
+Au premier lancement, l'application cherche le poste principal sur le Wi-Fi (diffusion UDP, port 7444) :
+- **aucun trouvé** : « Faire de ce PC le poste principal » démarre le serveur (autorisation administrateur
+  demandée une fois) et ouvre le pare-feu au réseau privé (TCP 7443, UDP 7444) ; le gérant crée son compte ;
+- **trouvé** : le PC le rejoint avec le code d'activation donné par le gérant (Administration → Appareils).
+
+Les mises à jour réactivent d'elles-mêmes le serveur du poste principal. La CI installe réellement l'application
+sur Windows et vérifie : service à l'arrêt après installation, activation, découverte réseau, chiffrement DPAPI,
+écoute locale de la base, redémarrage, mise à jour et désinstallation.

@@ -90,6 +90,10 @@ fs.copyFileSync(
   path.join(racine, 'apps/desktop/installateur/SOMIDAC-Serveur.xml'),
   path.join(serviceCible, 'SOMIDAC-Serveur.xml'),
 );
+fs.copyFileSync(
+  path.join(racine, 'apps/desktop/installateur/activer-poste-principal.cmd'),
+  path.join(serviceCible, 'activer-poste-principal.cmd'),
+);
 
 // --- Visual C++ (Microsoft) ---
 // Adresse figée d'une version précise (l'empreinte fait partie de l'adresse) : vérifiée ci-dessous.

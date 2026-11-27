@@ -74,6 +74,7 @@ export async function demarrerService(c: ConfigService): Promise<{ arreter: () =
         hoteEcoute: '0.0.0.0',
         version: process.env.SOMIDAC_VERSION ?? '0.1.0',
         pgBin: c.pgBin,
+        portDecouverte: Number(process.env.SOMIDAC_PORT_DECOUVERTE ?? 7444),
         sauvegardesDir: path.join(c.racine, 'sauvegardes'),
       },
       { coffre: c.coffre },

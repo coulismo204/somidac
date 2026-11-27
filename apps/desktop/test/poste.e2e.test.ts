@@ -5,6 +5,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { demarrerServeur, ServeurTest, sql, viderBase } from '../../server/test/outils';
+import { DecouverteService } from '../../server/src/noyau/decouverte/decouverte.service';
+import { rechercherPostesPrincipaux } from '../src/main/poste/decouverte';
 import { Chiffreur, ErreurPoste, Poste } from '../src/main/poste/poste';
 
 /** Simule le chiffrement du système (DPAPI) : une clé propre à « ce PC ». */
@@ -43,6 +45,16 @@ describe('Poste : enregistrement et connexion', () => {
     srv = await demarrerServeur();
   });
   after(async () => srv?.arreter());
+
+  it('trouve le poste principal sur le réseau, sans saisir d’adresse', async () => {
+    const port = srv.app.get(DecouverteService).port!;
+    const trouves = await rechercherPostesPrincipaux({ port, delaiMs: 1000 });
+    assert.equal(trouves.length, 1, JSON.stringify(trouves));
+    assert.equal(trouves[0].application, 'somidac');
+    assert.equal(trouves[0].port, srv.port);
+    assert.equal(trouves[0].initialise, false);
+    assert.equal(trouves[0].local, true);
+  });
 
   it('initialise le poste principal et protège sa clé', async () => {
     principal = new Poste(dossierPrincipal, pcPrincipal);

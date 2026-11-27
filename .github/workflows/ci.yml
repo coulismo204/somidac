@@ -50,18 +50,21 @@ jobs:
       - name: Composants Windows
         run: node scripts/ci.mjs "Composants Windows" node scripts/preparer-windows.mjs apps/desktop/ressources-windows
       - run: npm run build -w @somidac/desktop
-      - name: Installateur du poste principal
-        run: node scripts/ci.mjs "Installateur principal" npm run installateur:principal -w @somidac/desktop
-      - name: Installateur des postes secondaires
-        run: node scripts/ci.mjs "Installateur poste" npm run installateur:poste -w @somidac/desktop
+      - name: Installateur (unique, tous les PC)
+        run: node scripts/ci.mjs "Installateur" npm run installateur -w @somidac/desktop
 
-      - name: Test réel — installation silencieuse du poste principal
+      - name: Test réel — installation silencieuse, puis activation du poste principal
         shell: pwsh
         run: |
-          $exe = Get-ChildItem apps/desktop/release/principal/*.exe | Select-Object -First 1
+          $exe = Get-ChildItem apps/desktop/release/*.exe | Select-Object -First 1
           Write-Output "Installation de $($exe.Name)"
           Start-Process $exe.FullName -ArgumentList '/S' -Wait
-          Get-Service SOMIDAC-Serveur | Format-List Name, Status, StartType
+          # Après installation : service présent mais arrêté (aucun PC n'est principal par défaut).
+          $service = Get-Service SOMIDAC-Serveur
+          $service | Format-List Name, Status, StartType
+          if ($service.Status -ne 'Stopped') { throw 'Le service ne doit pas démarrer avant le choix du poste principal' }
+          # Ce que fait le bouton « Faire de ce PC le poste principal » (ici déjà administrateur).
+          & cmd.exe /c "`"$env:ProgramFiles\SOMIDAC\resources\service\activer-poste-principal.cmd`""
           $reponse = $null
           for ($i = 0; $i -lt 90; $i++) {
             $reponse = curl.exe -sk --max-time 5 https://127.0.0.1:7443/api/v1/initialisation
@@ -69,7 +72,19 @@ jobs:
             Start-Sleep -Seconds 2
           }
           Write-Output "Réponse du serveur : $reponse"
-          if ($reponse -notmatch '"initialise":false') { throw 'Le serveur SOMIDAC ne répond pas après installation' }
+          if ($reponse -notmatch '"initialise":false') { throw 'Le serveur SOMIDAC ne répond pas après activation' }
+          if ((Get-Service SOMIDAC-Serveur).StartType -ne 'Automatic') { throw 'Le service doit démarrer avec Windows une fois activé' }
+          if (-not (Get-NetFirewallRule -DisplayName 'SOMIDAC Serveur' -ErrorAction SilentlyContinue)) { throw 'Règle de pare-feu absente' }
+          # Découverte : le poste principal répond aux recherches sur le réseau (UDP 7444).
+          $udp = New-Object System.Net.Sockets.UdpClient
+          $udp.Client.ReceiveTimeout = 5000
+          $octets = [Text.Encoding]::UTF8.GetBytes('SOMIDAC-DECOUVERTE-1')
+          [void]$udp.Send($octets, $octets.Length, '127.0.0.1', 7444)
+          $distant = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any, 0)
+          $decouverte = [Text.Encoding]::UTF8.GetString($udp.Receive([ref]$distant))
+          $udp.Close()
+          Write-Output "Découverte : $decouverte"
+          if ($decouverte -notmatch '"application":"somidac"') { throw 'Pas de réponse à la découverte réseau' }
           # Les secrets doivent être chiffrés par DPAPI, jamais en clair.
           $secrets = Get-ChildItem "$env:ProgramData\SOMIDAC\secrets"
           $secrets | Format-Table Name, Length
@@ -87,7 +102,21 @@ jobs:
             Start-Sleep -Seconds 2
           }
           if ($reponse -notmatch '"statut":"ok"') { throw 'Le serveur ne redémarre pas' }
-          Write-Output 'Installation, démarrage et redémarrage du service : OK'
+          Write-Output 'Installation, activation, découverte et redémarrage : OK'
+
+      - name: Test réel — mise à jour du poste principal (réactivé tout seul)
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem apps/desktop/release/*.exe | Select-Object -First 1
+          Start-Process $exe.FullName -ArgumentList '/S' -Wait
+          $reponse = $null
+          for ($i = 0; $i -lt 90; $i++) {
+            $reponse = curl.exe -sk --max-time 5 https://127.0.0.1:7443/api/v1/sante
+            if ($reponse) { break }
+            Start-Sleep -Seconds 2
+          }
+          if ($reponse -notmatch '"statut":"ok"') { throw 'Le poste principal ne redémarre pas après mise à jour' }
+          Write-Output 'Mise à jour : serveur réactivé'
 
       - name: Test réel — désinstallation (données conservées)
         shell: pwsh
@@ -96,6 +125,7 @@ jobs:
           Start-Process $desinstalleur.FullName -ArgumentList '/S' -Wait
           Start-Sleep -Seconds 10
           if (Get-Service SOMIDAC-Serveur -ErrorAction SilentlyContinue) { throw 'Le service est encore présent' }
+          if (Get-NetFirewallRule -DisplayName 'SOMIDAC Serveur' -ErrorAction SilentlyContinue) { throw 'Règle de pare-feu encore présente' }
           if (-not (Test-Path "$env:ProgramData\SOMIDAC\base\PG_VERSION")) { throw 'Les données ont été supprimées' }
           Write-Output 'Désinstallation : service retiré, données conservées'
 
@@ -107,7 +137,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: installateurs-windows
-          path: |
-            apps/desktop/release/principal/*.exe
-            apps/desktop/release/poste/*.exe
+          path: apps/desktop/release/*.exe
           retention-days: 30

@@ -1,5 +1,5 @@
 <!--
-  Service Windows « SOMIDAC Serveur » (WinSW) : installé uniquement sur le poste principal.
+  Service Windows « SOMIDAC Serveur » (WinSW) : installé sur chaque PC, démarré seulement sur le poste principal.
   %BASE% = dossier de ce fichier : <installation>\resources\service
 -->
 <service>
@@ -23,8 +23,8 @@
     <user>NetworkService</user>
   </serviceaccount>
 
-  <startmode>Automatic</startmode>
-  <delayedAutoStart/>
+  <!-- Installé à l'arrêt sur tous les PC : seul le poste principal l'active (activer-poste-principal.cmd). -->
+  <startmode>Manual</startmode>
   <stoptimeout>60 sec</stoptimeout>
   <onfailure action="restart" delay="10 sec"/>
   <onfailure action="restart" delay="30 sec"/>

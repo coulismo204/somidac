@@ -34,6 +34,21 @@ export function decouperCodeActivation(code: string): { idCode: string; secret: 
   return { idCode: m[1], secret: m[2] + m[3] };
 }
 
+/** Découverte du poste principal sur le réseau local (UDP). */
+export const PORT_SERVEUR = 7443;
+export const PORT_DECOUVERTE = 7444;
+export const MESSAGE_DECOUVERTE = 'SOMIDAC-DECOUVERTE-1';
+
+/** Réponse d'un poste principal à une recherche sur le réseau (aucune donnée secrète). */
+export interface ReponseDecouverte {
+  application: 'somidac';
+  version: string;
+  port: number;
+  entreprise: string;
+  initialise: boolean;
+  nomMachine: string;
+}
+
 /** Codes d'erreur stables renvoyés par le serveur. */
 export const CODES_ERREUR = {
   APPAREIL_NON_RECONNU: 'APPAREIL_NON_RECONNU',

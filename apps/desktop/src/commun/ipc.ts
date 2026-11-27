@@ -26,6 +26,17 @@ export interface Profil {
   permissions: string[];
 }
 
+/** Poste principal trouvé sur le réseau local. */
+export interface PostePrincipalTrouve {
+  adresse: string;
+  port: number;
+  entreprise: string;
+  initialise: boolean;
+  nomMachine: string;
+  version: string;
+  local: boolean;
+}
+
 /** Diagnostic du serveur installé sur ce PC (poste principal). */
 export interface EtatServeurLocal {
   joignable: boolean;
@@ -48,6 +59,10 @@ export interface ApiSomidac {
     etat(): Promise<Resultat<EtatPoste>>;
     etatServeurLocal(): Promise<Resultat<EtatServeurLocal>>;
     adressesReseau(): Promise<Resultat<string[]>>;
+    /** Cherche le poste principal sur le réseau local. */
+    rechercher(): Promise<Resultat<PostePrincipalTrouve[]>>;
+    /** Fait de ce PC le poste principal (autorisation administrateur). */
+    activerPrincipal(): Promise<Resultat<void>>;
     initialiserPrincipal(donnees: {
       raisonSociale?: string;
       gerant: { identifiant: string; nomComplet: string; motDePasse: string };
@@ -72,6 +87,8 @@ export const CANAUX = {
   ADRESSES: 'poste:adresses',
   INITIALISER: 'poste:initialiser',
   REENREGISTRER: 'poste:reenregistrer',
+  RECHERCHER: 'poste:rechercher',
+  ACTIVER_PRINCIPAL: 'poste:activer-principal',
   ENREGISTRER: 'poste:enregistrer',
   OUBLIER: 'poste:oublier',
   CONNECTER: 'session:connecter',

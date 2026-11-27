@@ -9,9 +9,19 @@ function formaterCode(saisie: string): string {
   return brut.match(/.{1,4}/g)?.join('-') ?? '';
 }
 
-export function ConfigPosteSecondaire({ onRetour }: { onRetour: () => void }) {
+export function ConfigPosteSecondaire({
+  onRetour,
+  adresseInitiale,
+  nomPrincipal,
+}: {
+  onRetour: () => void;
+  /** Adresse du poste principal trouvé sur le réseau (sinon saisie manuelle). */
+  adresseInitiale?: string;
+  nomPrincipal?: string;
+}) {
   const { rafraichirPoste } = useSession();
-  const [adresse, setAdresse] = useState('');
+  const [adresse, setAdresse] = useState(adresseInitiale ?? '');
+  const trouve = !!adresseInitiale;
   const [code, setCode] = useState('');
   const [erreur, setErreur] = useState<string>();
   const [envoi, setEnvoi] = useState(false);
@@ -38,22 +48,29 @@ export function ConfigPosteSecondaire({ onRetour }: { onRetour: () => void }) {
         <span />
       </div>
       <div className="entete">
-        <h1>Poste secondaire</h1>
+        <h1>Rejoindre le poste principal</h1>
         <p>
-          Sur le poste principal, le gérant ouvre <strong>Administration → Appareils</strong>, crée ce poste et vous
-          donne l'adresse du serveur et un code d'activation, valable 15 minutes.
+          {trouve ? (
+            <>
+              Poste principal trouvé sur le réseau : <strong>{nomPrincipal}</strong>.{' '}
+            </>
+          ) : null}
+          Sur le poste principal, le gérant ouvre <strong>Administration → Appareils → Nouvel appareil</strong> et vous
+          donne un code d'activation, valable 15 minutes.
         </p>
       </div>
       <form onSubmit={valider} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <Champ
-          libelle="Adresse du poste principal"
-          aide="Affichée avec le code (ex. : 192.168.1.10)"
-          value={adresse}
-          onChange={(e) => setAdresse(e.target.value)}
-          placeholder="192.168.1.10"
-          required
-          autoFocus
-        />
+        {!trouve && (
+          <Champ
+            libelle="Adresse du poste principal"
+            aide="Affichée avec le code (ex. : 192.168.1.10)"
+            value={adresse}
+            onChange={(e) => setAdresse(e.target.value)}
+            placeholder="192.168.1.10"
+            required
+            autoFocus
+          />
+        )}
         <div className="champ">
           <label htmlFor="code">Code d'activation</label>
           <input
@@ -62,6 +79,7 @@ export function ConfigPosteSecondaire({ onRetour }: { onRetour: () => void }) {
             value={code}
             onChange={(e) => setCode(formaterCode(e.target.value))}
             placeholder="ABCD-EFGH-JKLM"
+            autoFocus={trouve}
             autoComplete="off"
             spellCheck={false}
             required

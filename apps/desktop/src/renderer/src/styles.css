@@ -114,7 +114,8 @@ form .actions, .actions { display: flex; gap: 10px; justify-content: flex-end; a
   background: var(--surface); cursor: pointer; display: flex; gap: 16px; align-items: flex-start;
   box-shadow: var(--ombre); transition: border-color 0.15s, transform 0.15s;
 }
-.choix-mode button:hover { border-color: var(--bleu); transform: translateY(-1px); }
+.choix-mode button:hover:not(:disabled) { border-color: var(--bleu); transform: translateY(-1px); }
+.choix-mode button:disabled { opacity: 0.6; cursor: not-allowed; }
 .choix-mode .icone {
   width: 42px; height: 42px; border-radius: 10px; background: var(--bleu-clair); color: var(--bleu);
   display: grid; place-items: center; flex-shrink: 0;

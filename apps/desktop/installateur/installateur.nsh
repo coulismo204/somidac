@@ -1,10 +1,11 @@
-; Installation du poste principal : service « SOMIDAC Serveur », dossier de données protégé, pare-feu.
+; Installateur unique (tous les PC) : bibliothèques Visual C++, dossier de données protégé, service
+; « SOMIDAC Serveur » installé à l'arrêt. Seul le PC qui devient poste principal le démarre
+; (activer-poste-principal.cmd, lancé depuis l'application avec l'autorisation administrateur).
 ; Inclus par electron-builder (nsis.include).
 
 !include LogicLib.nsh
 
 !define SOMIDAC_SERVICE "SOMIDAC-Serveur"
-!define SOMIDAC_PORT "7443"
 
 ; Avant de remplacer ou supprimer les fichiers (installation, mise à jour, désinstallation) :
 ; arrêter le service, qui utilise SOMIDAC.exe, puis vérifier que l'application n'est pas ouverte.
@@ -40,18 +41,20 @@
   Pop $R3
   DetailPrint "Visual C++ : code $R3"
 
-  ; Service Windows (démarrage automatique, redémarrage en cas d'échec).
+  ; Service Windows, installé à l'arrêt (démarrage manuel) sur chaque PC.
   nsExec::ExecToLog '"$INSTDIR\resources\service\SOMIDAC-Serveur.exe" install'
-  nsExec::ExecToLog '"$INSTDIR\resources\service\SOMIDAC-Serveur.exe" start'
 
-  ; Pare-feu : les autres postes du réseau privé (Wi-Fi de l'entreprise) peuvent joindre le serveur.
-  nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="SOMIDAC Serveur"'
-  nsExec::ExecToLog 'netsh advfirewall firewall add rule name="SOMIDAC Serveur" dir=in action=allow protocol=TCP localport=${SOMIDAC_PORT} profile=private,domain'
+  ; Mise à jour du poste principal : il est réactivé tout seul (service, pare-feu).
+  ${If} ${FileExists} "$R2\SOMIDAC\poste-principal"
+    DetailPrint "Poste principal : réactivation du serveur SOMIDAC…"
+    nsExec::ExecToLog '"$INSTDIR\resources\service\activer-poste-principal.cmd"'
+  ${EndIf}
 !macroend
 
 !macro customUnInstall
   nsExec::ExecToLog '"$INSTDIR\resources\service\SOMIDAC-Serveur.exe" stop'
   nsExec::ExecToLog '"$INSTDIR\resources\service\SOMIDAC-Serveur.exe" uninstall'
   nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="SOMIDAC Serveur"'
+  nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="SOMIDAC Decouverte"'
   ; Les données (C:\ProgramData\SOMIDAC) sont conservées : base, certificats, sauvegardes.
 !macroend
