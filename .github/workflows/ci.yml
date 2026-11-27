@@ -104,9 +104,16 @@ jobs:
           if ($reponse -notmatch '"statut":"ok"') { throw 'Le serveur ne redémarre pas' }
           Write-Output 'Installation, activation, découverte et redémarrage : OK'
 
-      - name: Test réel — mise à jour du poste principal (réactivé tout seul)
+      - name: Test réel — mise à jour du poste principal (droits cassés réparés, réactivé tout seul)
         shell: pwsh
         run: |
+          # Reproduit l'état laissé par les versions 0.1.x / 0.2.0 : un secret appartenant au service,
+          # sans plus aucun droit pour personne (même les administrateurs ne peuvent plus le lire).
+          Stop-Service SOMIDAC-Serveur
+          $f = "$env:ProgramData\SOMIDAC\secrets\motDePasseBase.dpapi"
+          icacls $f /setowner '*S-1-5-20' | Out-Null
+          icacls $f /inheritance:r | Out-Null
+          icacls $f /remove:g '*S-1-5-32-544' '*S-1-5-18' '*S-1-5-20' | Out-Null
           $exe = Get-ChildItem apps/desktop/release/*.exe | Select-Object -First 1
           Start-Process $exe.FullName -ArgumentList '/S' -Wait
           $reponse = $null

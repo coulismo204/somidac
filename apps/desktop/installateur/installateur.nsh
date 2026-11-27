@@ -36,6 +36,10 @@
   ReadEnvStr $R2 PROGRAMDATA
   CreateDirectory "$R2\SOMIDAC"
   CreateDirectory "$R2\SOMIDAC\journaux"
+  ; Réparation : les administrateurs reprennent d'abord la propriété de tout le contenu (sinon Windows
+  ; refuse de corriger les droits d'un fichier qui ne leur laisse aucun accès), puis tout est remis à
+  ; l'héritage du dossier. /setowner utilise le privilège de restauration des administrateurs.
+  nsExec::ExecToLog 'icacls "$R2\SOMIDAC" /setowner *S-1-5-32-544 /T /C /Q'
   nsExec::ExecToLog 'icacls "$R2\SOMIDAC" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-20:(OI)(CI)M /C /Q'
   nsExec::ExecToLog 'icacls "$R2\SOMIDAC\*" /reset /T /C /Q'
   ; Journaux lisibles par les utilisateurs du PC (aucun secret dedans) : l'application peut
