@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 import { Icone, Message } from '../../composants/communs';
 import { messageErreur, useSession } from '../../contexte';
 import { formaterJour, formaterMontant } from '../../format';
@@ -22,6 +23,8 @@ export function Achats() {
   const [liste, setListe] = useState<LigneAchat[]>();
   const [ouvert, setOuvert] = useState<string | 'nouveau'>();
   const [erreur, setErreur] = useState<string>();
+  const { key } = useLocation();
+  useEffect(() => setOuvert(undefined), [key]);
 
   const charger = useCallback(async () => {
     try {

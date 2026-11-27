@@ -117,6 +117,7 @@ export function Coquille({ children }: { children: ReactNode }) {
         <div className="poste-info">
           <strong>{poste?.nomAppareil}</strong>
           {poste?.mode === 'principal' ? 'Héberge le serveur' : `Connecté au serveur ${poste?.serveur?.hote ?? ''}`}
+          <div className="realise-par">Réalisé par Wéllé Labs</div>
         </div>
       </aside>
       <div className="principal">

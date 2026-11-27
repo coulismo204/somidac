@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 import { Icone, Message } from '../../composants/communs';
 import { messageErreur, useSession } from '../../contexte';
 import { formaterJour, formaterMontant } from '../../format';
@@ -62,6 +63,9 @@ export function Ventes() {
   const [onglet, setOnglet] = useState<Onglet>('livraisons');
   const [ouvert, setOuvert] = useState<Ouvert>();
   const [version, setVersion] = useState(0);
+  // Un clic sur « Ventes » dans le menu ramène à la liste, même depuis un document ouvert.
+  const { key } = useLocation();
+  useEffect(() => setOuvert(undefined), [key]);
   const fermer = () => {
     setOuvert(undefined);
     setVersion((v) => v + 1);

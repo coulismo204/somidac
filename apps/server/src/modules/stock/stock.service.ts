@@ -1,9 +1,23 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { AjustementDto } from '@somidac/shared';
-import { and, asc, desc, eq, gt, isNull, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, ilike, isNull, lt, lte, or, sql } from 'drizzle-orm';
 import { AuditService } from '../../noyau/audit/audit.service';
 import { DB, Db, DbOuTx } from '../../noyau/base/base';
-import { categories, lots, marques, mouvementsStock, produits } from '../../noyau/base/schema';
+import {
+  achats,
+  avoirs,
+  bonsLivraison,
+  categories,
+  clients,
+  fournisseurs,
+  inventaires,
+  lots,
+  marques,
+  mouvementsStock,
+  produits,
+  utilisateurs,
+} from '../../noyau/base/schema';
 import { ErreurMetier } from '../../noyau/commun/erreurs';
 import { ParametresService } from '../../noyau/parametres/parametres.service';
 
@@ -323,6 +337,88 @@ export class StockService {
       .orderBy(desc(mouvementsStock.date))
       .limit(Math.min(limite, 500));
     return lignes.map(({ coutCentimes, ...l }) => (voirCouts ? { ...l, cout: Math.round(coutCentimes / 100) } : l));
+  }
+
+  /**
+   * Journal des entrées ou des sorties de stock sur une période (§5.4) : chaque mouvement avec
+   * son produit, son lot, son document d'origine (achat, bon de livraison, avoir, inventaire) et son auteur.
+   */
+  async journal(options: { sens: 'entree' | 'sortie'; du: string; au: string; recherche?: string; type?: string; voirCouts: boolean }) {
+    const lendemain = new Date(`${options.au}T12:00:00`);
+    lendemain.setDate(lendemain.getDate() + 1);
+    const conditions = [
+      options.sens === 'entree' ? gt(mouvementsStock.quantite, 0) : lt(mouvementsStock.quantite, 0),
+      sql`${mouvementsStock.date} >= ${options.du}::date`,
+      sql`${mouvementsStock.date} < ${aujourdhui(lendemain)}::date`,
+    ];
+    if (options.type) conditions.push(eq(mouvementsStock.type, options.type as TypeMouvement));
+    if (options.recherche?.trim()) {
+      const motif = `%${options.recherche.trim()}%`;
+      conditions.push(or(ilike(produits.designation, motif), ilike(produits.code, motif))!);
+    }
+    const doc = (type: string, id: AnyPgColumn) => and(eq(mouvementsStock.documentType, type), eq(mouvementsStock.documentId, id));
+    const lignes = await this.db
+      .select({
+        id: mouvementsStock.id,
+        date: mouvementsStock.date,
+        type: mouvementsStock.type,
+        quantite: mouvementsStock.quantite,
+        coutCentimes: mouvementsStock.coutCentimes,
+        motif: mouvementsStock.motif,
+        produitId: produits.id,
+        codeProduit: produits.code,
+        produit: produits.designation,
+        lotNumero: lots.numero,
+        lotPeremption: lots.datePeremption,
+        documentType: mouvementsStock.documentType,
+        documentId: mouvementsStock.documentId,
+        achat: achats.numero,
+        fournisseur: fournisseurs.nom,
+        bonLivraison: bonsLivraison.numero,
+        avoir: avoirs.numero,
+        client: sql<string | null>`coalesce(${clients.raisonSociale}, (SELECT c.raison_sociale FROM clients c WHERE c.id = ${avoirs.clientId}))`,
+        inventaire: inventaires.libelle,
+        utilisateur: utilisateurs.nomComplet,
+      })
+      .from(mouvementsStock)
+      .innerJoin(produits, eq(produits.id, mouvementsStock.produitId))
+      .leftJoin(lots, eq(lots.id, mouvementsStock.lotId))
+      .leftJoin(achats, doc('achat', achats.id))
+      .leftJoin(fournisseurs, eq(fournisseurs.id, achats.fournisseurId))
+      .leftJoin(bonsLivraison, doc('bon_livraison', bonsLivraison.id))
+      .leftJoin(clients, eq(clients.id, bonsLivraison.clientId))
+      .leftJoin(avoirs, doc('avoir', avoirs.id))
+      .leftJoin(inventaires, doc('inventaire', inventaires.id))
+      .leftJoin(utilisateurs, eq(utilisateurs.id, mouvementsStock.utilisateurId))
+      .where(and(...conditions))
+      .orderBy(desc(mouvementsStock.date))
+      .limit(2_000);
+
+    const mouvements = lignes.map(({ coutCentimes, achat, fournisseur, bonLivraison, avoir, client, inventaire, ...l }) => ({
+      ...l,
+      pieces: Math.abs(l.quantite),
+      document: achat ?? bonLivraison ?? avoir ?? inventaire ?? null,
+      tiers: fournisseur ?? client ?? null,
+      ...(options.voirCouts ? { valeur: Math.round((Math.abs(l.quantite) * coutCentimes) / 100) } : {}),
+    }));
+    const parType: Record<string, { mouvements: number; pieces: number; valeur?: number }> = {};
+    for (const m of mouvements) {
+      const t = (parType[m.type] ??= { mouvements: 0, pieces: 0, ...(options.voirCouts ? { valeur: 0 } : {}) });
+      t.mouvements += 1;
+      t.pieces += m.pieces;
+      if (options.voirCouts) t.valeur! += m.valeur ?? 0;
+    }
+    return {
+      mouvements,
+      resume: {
+        mouvements: mouvements.length,
+        pieces: mouvements.reduce((t, m) => t + m.pieces, 0),
+        produits: new Set(mouvements.map((m) => m.produitId)).size,
+        ...(options.voirCouts ? { valeur: mouvements.reduce((t, m) => t + (m.valeur ?? 0), 0) } : {}),
+        parType,
+      },
+      limite: lignes.length === 2_000,
+    };
   }
 
   /** Lots périmés ou à écouler bientôt, pour le tableau de bord. */

@@ -282,6 +282,9 @@ export function EditeurLivraison({ id, onFermer, onOuvrirFacture }: { id?: strin
           {detail?.statut === 'livre' && <button className="bouton" onClick={() => setModale('reception')}>Saisir la réception</button>}
           {detail?.statut === 'receptionne' && <button className="bouton" disabled={envoi} onClick={() => void facturer()}>Établir la facture</button>}
           {detail?.facture && <button className="bouton" onClick={() => onOuvrirFacture(detail.facture!.id)}>Voir la facture {detail.facture.numero}</button>}
+          {brouillon && idCourant && (
+            <button className="bouton discret" style={{ color: 'var(--danger)' }} disabled={envoi} onClick={() => void supprimer()}>Supprimer le brouillon</button>
+          )}
           <button className="bouton secondaire" onClick={() => onFermer(!!idCourant)}>Retour à la liste</button>
         </div>
       </div>
@@ -402,8 +405,10 @@ export function EditeurLivraison({ id, onFermer, onOuvrirFacture }: { id?: strin
                   !brouillon && valide ? (
                     <tr key={`${i}-v`} className="sous-ligne">
                       <td colSpan={colonnes}>
-                        {formaterNombre(valide.quantitePieces)} pièces · lot{valide.lots.length > 1 ? 's' : ''}{' '}
-                        {valide.lots.map((x) => `${x.numero || 'sans lot'}${x.datePeremption ? ` (exp. ${formaterJour(x.datePeremption)})` : ''} : ${x.quantite}`).join(', ')}
+                        {formaterNombre(valide.quantitePieces)} pièces
+                        {valide.lots.some((x) => x.numero)
+                          ? ` · lot${valide.lots.length > 1 ? 's' : ''} ` + valide.lots.map((x) => `${x.numero || 'sans lot'}${x.datePeremption ? ` (exp. ${formaterJour(x.datePeremption)})` : ''} : ${x.quantite}`).join(', ')
+                          : ''}
                         {valide.motifRefus ? ` · refus : ${valide.motifRefus}` : ''}
                         {valide.coutPiece != null ? ` · coût ${formaterMontant(valide.coutPiece)} la pièce` : ''}
                       </td>
@@ -465,7 +470,6 @@ export function EditeurLivraison({ id, onFermer, onOuvrirFacture }: { id?: strin
                 </div>
               )}
               <div className="pied-modale" style={{ borderTop: '1px solid var(--bord)' }}>
-                <button className="bouton discret" style={{ color: 'var(--danger)', marginRight: 'auto' }} onClick={() => void supprimer()}>Supprimer le brouillon</button>
                 <button className="bouton secondaire" disabled={envoi || !entete.clientId} onClick={() => void executer(async () => { await enregistrer(); setInfo('Brouillon enregistré.'); })}>Enregistrer le brouillon</button>
                 <button className="bouton" disabled={envoi || !entete.clientId || lignes.length === 0} onClick={() => setModale('valider')}>Valider la livraison</button>
               </div>

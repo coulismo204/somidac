@@ -3,6 +3,7 @@ import { Champ, Message, Modale } from '../../composants/communs';
 import { messageErreur, useSession } from '../../contexte';
 import { formaterDateHeure, formaterJour, formaterMontant, formaterNombre } from '../../format';
 import { Inventaires } from './Inventaires';
+import { Mouvements } from './Mouvements';
 
 interface LotEtat {
   id: string;
@@ -169,7 +170,7 @@ function Historique({ produit, onFermer }: { produit: ProduitEtat; onFermer: () 
 
 export function Stock() {
   const { appeler, peut } = useSession();
-  const [onglet, setOnglet] = useState<'etat' | 'inventaires'>('etat');
+  const [onglet, setOnglet] = useState<'etat' | 'entrees' | 'sorties' | 'inventaires'>('etat');
   const [etat, setEtat] = useState<Etat>();
   const [recherche, setRecherche] = useState('');
   const [alertes, setAlertes] = useState(false);
@@ -197,14 +198,18 @@ export function Stock() {
       <div className="entete-page">
         <div>
           <h1>Stock</h1>
-          <p>Quantités en pièces, par lot. Le lot qui périme en premier sort d'abord.</p>
+          <p>Quantités en pièces, par lot. Le lot qui périme en premier sort d'abord. Les entrées et sorties retracent chaque mouvement.</p>
         </div>
       </div>
       <div className="onglets">
         <button className={onglet === 'etat' ? 'actif' : ''} onClick={() => setOnglet('etat')}>État du stock</button>
+        <button className={onglet === 'entrees' ? 'actif' : ''} onClick={() => setOnglet('entrees')}>Entrées de stock</button>
+        <button className={onglet === 'sorties' ? 'actif' : ''} onClick={() => setOnglet('sorties')}>Sorties de stock</button>
         {peut('stock.ajuster') && <button className={onglet === 'inventaires' ? 'actif' : ''} onClick={() => setOnglet('inventaires')}>Inventaires</button>}
       </div>
-      {onglet === 'inventaires' ? (
+      {onglet === 'entrees' || onglet === 'sorties' ? (
+        <Mouvements key={onglet} sens={onglet === 'entrees' ? 'entree' : 'sortie'} />
+      ) : onglet === 'inventaires' ? (
         <Inventaires onChangement={() => void charger()} />
       ) : (
         <>

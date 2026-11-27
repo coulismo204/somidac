@@ -296,6 +296,32 @@ describe('Clients et ventes', () => {
     assert.equal((await g('POST', `/livraisons/${b.corps.id}/facturer`)).statut, 409);
   });
 
+  it('entrées et sorties de stock : document d’origine, tiers, résumé par type, coûts cachés au magasinier', async () => {
+    const sorties = (await g('GET', `/stock/mouvements?sens=sortie&du=${jour}&au=${jour}`)).corps;
+    const vente = sorties.mouvements.find((m: { type: string; document: string }) => m.type === 'vente' && m.document === `BL-${annee}-00001`);
+    assert.ok(vente, 'la vente du BL-00001 apparaît dans les sorties');
+    assert.equal(vente.tiers, 'Supermarché Bon Prix');
+    assert.ok(vente.quantite < 0 && vente.pieces > 0 && vente.valeur > 0);
+    assert.equal(sorties.resume.parType.casse.pieces, 1);
+    assert.ok(sorties.mouvements.every((m: { quantite: number }) => m.quantite < 0));
+
+    const entrees = (await g('GET', `/stock/mouvements?sens=entree&du=${jour}&au=${jour}`)).corps;
+    const achat = entrees.mouvements.find((m: { type: string }) => m.type === 'achat');
+    assert.equal(achat.document, `ACH-${annee}-00001`);
+    assert.equal(achat.tiers, 'Grossiste du port');
+    assert.equal(entrees.resume.parType.achat.pieces, 48 + 24 + 10 + 10);
+    const avoir = entrees.mouvements.find((m: { document: string | null }) => m.document === `AV-${annee}-00001`);
+    assert.equal(avoir.type, 'retour_client');
+    assert.equal(avoir.tiers, 'Supermarché Bon Prix');
+
+    const filtre = (await g('GET', `/stock/mouvements?sens=entree&du=${jour}&au=${jour}&type=achat&recherche=seau`)).corps;
+    assert.equal(filtre.mouvements.length, 1);
+    assert.equal((await g('GET', '/stock/mouvements?sens=entree&du=2000-01-01&au=2000-01-31')).corps.mouvements.length, 0);
+    const mag = (await en('moussa')('GET', `/stock/mouvements?sens=sortie&du=${jour}&au=${jour}`)).corps;
+    assert.equal(mag.resume.valeur, undefined);
+    assert.equal(mag.mouvements[0].valeur, undefined);
+  });
+
   it('le journal d’audit reste intègre', async () => {
     const r = await g('GET', '/audit/verification');
     assert.equal(r.corps.valide, true);

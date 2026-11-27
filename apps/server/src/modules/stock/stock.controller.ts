@@ -11,7 +11,10 @@ import { AppareilCourant, ModuleMetier, Permissions, UtilisateurCourant } from '
 import type { AppareilConnecte, UtilisateurConnecte } from '../../noyau/commun/requete';
 import { ZodPipe } from '../../noyau/commun/zod.pipe';
 import { InventairesService } from './inventaires.service';
-import { StockService } from './stock.service';
+import { aujourdhui, StockService } from './stock.service';
+import { typeMouvement } from '../../noyau/base/schema';
+
+const TYPES_MOUVEMENT: string[] = typeMouvement.enumValues;
 
 @Controller('stock')
 @ModuleMetier('stock')
@@ -21,6 +24,28 @@ export class StockController {
   @Get()
   etat(@UtilisateurCourant() u: UtilisateurConnecte, @Query('recherche') recherche?: string, @Query('alertes') alertes?: string) {
     return this.stock.etat({ recherche, alertes: alertes === '1', voirCouts: u.permissions.has(PERMISSIONS.COUTS_VOIR) });
+  }
+
+  /** Entrées (sens=entree) ou sorties (sens=sortie) sur une période ; par défaut le mois en cours. */
+  @Get('mouvements')
+  journal(
+    @UtilisateurCourant() u: UtilisateurConnecte,
+    @Query('sens') sens?: string,
+    @Query('du') du?: string,
+    @Query('au') au?: string,
+    @Query('recherche') recherche?: string,
+    @Query('type') type?: string,
+  ) {
+    const jour = /^\d{4}-\d{2}-\d{2}$/;
+    const aujourdhuiIso = aujourdhui();
+    return this.stock.journal({
+      sens: sens === 'sortie' ? 'sortie' : 'entree',
+      du: du && jour.test(du) ? du : `${aujourdhuiIso.slice(0, 8)}01`,
+      au: au && jour.test(au) ? au : aujourdhuiIso,
+      recherche,
+      type: type && TYPES_MOUVEMENT.includes(type) ? type : undefined,
+      voirCouts: u.permissions.has(PERMISSIONS.COUTS_VOIR),
+    });
   }
 
   @Get('a-ecouler')
