@@ -1,5 +1,6 @@
 /** Types de documents numérotés (règle R6) : série annuelle, continue, sans trou. */
 export const TYPES_DOCUMENTS = {
+  INV: 'Inventaire',
   ACH: 'Achat',
   BL: 'Bon de livraison',
   FAC: 'Facture',
