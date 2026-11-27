@@ -3,6 +3,7 @@ import { CONFIGURATION, Configuration } from './config/configuration';
 import { AchatsModule } from './modules/achats/achats.module';
 import { CatalogueModule } from './modules/catalogue/catalogue.module';
 import { StockModule } from './modules/stock/stock.module';
+import { VentesModule } from './modules/ventes/ventes.module';
 import { NoyauModule } from './noyau/noyau.module';
 import { Coffre, COFFRE } from './noyau/pki/coffre';
 import { Pki, PKI } from './noyau/pki/pki';
@@ -33,7 +34,7 @@ export class AppModule {
   static avec(config: Configuration, pki: Pki, coffre: Coffre): DynamicModule {
     return {
       module: AppModule,
-      imports: [ConfigurationModule.avec(config, pki, coffre), NoyauModule, CatalogueModule, StockModule, AchatsModule],
+      imports: [ConfigurationModule.avec(config, pki, coffre), NoyauModule, CatalogueModule, StockModule, AchatsModule, VentesModule],
     };
   }
 }

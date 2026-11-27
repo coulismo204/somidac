@@ -5,3 +5,4 @@ export * from './documents';
 export * from './schemas';
 export * from './securite';
 export * from './catalogue';
+export * from './ventes';

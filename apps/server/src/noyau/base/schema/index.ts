@@ -4,3 +4,4 @@
  */
 export * from './noyau';
 export * from './catalogue';
+export * from './ventes';

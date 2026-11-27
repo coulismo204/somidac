@@ -5,6 +5,7 @@ import { AuditService } from '../../noyau/audit/audit.service';
 import { DB, Db, Tx } from '../../noyau/base/base';
 import {
   achatLignes,
+  blLignes,
   categories,
   codesBarres,
   conditionnements,
@@ -185,9 +186,10 @@ export class CatalogueService {
         })
         .where(eq(produits.id, id));
 
-      const utilises = new Set(
-        (await tx.selectDistinct({ id: achatLignes.conditionnementId }).from(achatLignes).where(eq(achatLignes.produitId, id))).map((x) => x.id),
-      );
+      const utilises = new Set([
+        ...(await tx.selectDistinct({ id: achatLignes.conditionnementId }).from(achatLignes).where(eq(achatLignes.produitId, id))).map((x) => x.id),
+        ...(await tx.selectDistinct({ id: blLignes.conditionnementId }).from(blLignes).where(eq(blLignes.produitId, id))).map((x) => x.id),
+      ]);
       const conds: (typeof conditionnements.$inferSelect)[] = [];
       for (const c of dto.conditionnements) {
         const ancien = c.id ? condsAvant.find((x) => x.id === c.id) : undefined;
@@ -195,7 +197,7 @@ export class CatalogueService {
         if (ancien && ancien.nbPieces !== c.nbPieces && utilises.has(ancien.id)) {
           throw new ErreurMetier(
             'CONDITIONNEMENT_UTILISE',
-            `« ${ancien.nom} » a déjà servi à des achats : son nombre de pièces ne peut plus changer. Créez un nouveau conditionnement.`,
+            `« ${ancien.nom} » a déjà servi à des achats ou des ventes : son nombre de pièces ne peut plus changer. Créez un nouveau conditionnement.`,
           );
         }
         const [r] = ancien
