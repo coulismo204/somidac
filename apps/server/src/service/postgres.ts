@@ -119,18 +119,23 @@ export class PostgresEmbarque {
     this.executer('pg_ctl', ['stop', '-D', this.o.dataDir, '-m', 'fast', '-w', '-t', '60'], 90_000);
   }
 
-  /** Crée la base applicative si elle n'existe pas encore. */
-  creerBase(nom: string, motDePasse: string) {
-    const env = { ...process.env, PGPASSWORD: motDePasse };
-    const args = ['-h', '127.0.0.1', '-p', String(this.o.port), '-U', this.o.utilisateur];
-    const existe = spawnSync(
-      this.outil('psql'),
-      [...args, '-d', 'postgres', '-tAc', `SELECT 1 FROM pg_database WHERE datname = '${nom}'`],
-      { encoding: 'utf8', env, windowsHide: true },
-    );
-    if (existe.status !== 0) throw new Error(`Base inaccessible : ${existe.stderr}`);
-    if (existe.stdout.trim() === '1') return;
-    const r = spawnSync(this.outil('createdb'), [...args, nom], { encoding: 'utf8', env, windowsHide: true });
-    if (r.status !== 0) throw new Error(`Création de la base ${nom} impossible : ${r.stderr}`);
+  /** Crée la base applicative si elle n'existe pas encore (connexion directe, sans outil externe). */
+  async creerBase(nom: string, motDePasse: string) {
+    const { Client } = await import('pg');
+    const client = new Client({
+      host: '127.0.0.1',
+      port: this.o.port,
+      user: this.o.utilisateur,
+      password: motDePasse,
+      database: 'postgres',
+      connectionTimeoutMillis: 15_000,
+    });
+    await client.connect();
+    try {
+      const r = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [nom]);
+      if (r.rowCount === 0) await client.query(`CREATE DATABASE "${nom.replace(/"/g, '')}"`);
+    } finally {
+      await client.end();
+    }
   }
 }

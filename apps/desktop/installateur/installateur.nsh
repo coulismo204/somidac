@@ -30,9 +30,17 @@
 !macro customInstall
   ; Données : C:\ProgramData\SOMIDAC, accessibles seulement au système, aux administrateurs
   ; et au compte du service (NetworkService). Les autres utilisateurs n'y ont pas accès.
+  ; Les droits sont posés sur le dossier seul ; tout son contenu en hérite. Les fichiers existants
+  ; (mise à jour) sont remis à l'héritage : ne jamais réappliquer des droits fichier par fichier,
+  ; ce qui peut retirer au service l'accès à sa base et à ses journaux.
   ReadEnvStr $R2 PROGRAMDATA
   CreateDirectory "$R2\SOMIDAC"
-  nsExec::ExecToLog 'icacls "$R2\SOMIDAC" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-20:(OI)(CI)M /T /C /Q'
+  CreateDirectory "$R2\SOMIDAC\journaux"
+  nsExec::ExecToLog 'icacls "$R2\SOMIDAC" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-20:(OI)(CI)M /C /Q'
+  nsExec::ExecToLog 'icacls "$R2\SOMIDAC\*" /reset /T /C /Q'
+  ; Journaux lisibles par les utilisateurs du PC (aucun secret dedans) : l'application peut
+  ; afficher la raison d'un arrêt du serveur.
+  nsExec::ExecToLog 'icacls "$R2\SOMIDAC\journaux" /grant *S-1-5-32-545:(OI)(CI)RX /C /Q'
 
   ; Bibliothèques Visual C++ de Microsoft, indispensables à PostgreSQL (souvent absentes d'un Windows de bureau).
   ; Codes de retour acceptés : 0 (installé), 1638 (version plus récente déjà présente), 3010 (redémarrage conseillé).

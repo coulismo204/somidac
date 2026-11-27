@@ -45,6 +45,8 @@ export interface EtatServeurLocal {
   installeAvecServeur: boolean;
   /** État du service Windows « SOMIDAC Serveur ». */
   service: 'demarre' | 'demarrage' | 'arrete' | 'absent' | 'inconnu';
+  /** Dernières lignes du journal du serveur (quand il ne répond pas). */
+  journal?: string[];
 }
 
 export type Resultat<T> = { ok: true; valeur: T } | { ok: false; code: string; message: string };

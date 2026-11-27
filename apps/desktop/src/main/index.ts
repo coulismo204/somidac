@@ -44,7 +44,19 @@ function etatServiceWindows(): EtatServeurLocal['service'] {
 async function diagnosticServeurLocal(): Promise<EtatServeurLocal> {
   const { joignable, initialise } = await poste.etatServeurLocal(PORT_SERVEUR_PAR_DEFAUT);
   const installeAvecServeur = !app.isPackaged || fs.existsSync(path.join(process.resourcesPath, 'service', 'SOMIDAC-Serveur.exe'));
-  return { joignable, initialise, installeAvecServeur, service: etatServiceWindows() };
+  return { joignable, initialise, installeAvecServeur, service: etatServiceWindows(), journal: joignable ? undefined : finJournalServeur() };
+}
+
+/** Dernières lignes utiles du journal du serveur (lisible par les utilisateurs du PC, sans secret). */
+function finJournalServeur(): string[] | undefined {
+  if (process.platform !== 'win32') return undefined;
+  const fichier = path.join(process.env.ProgramData ?? 'C:\\ProgramData', 'SOMIDAC', 'journaux', 'serveur.log');
+  try {
+    const lignes = fs.readFileSync(fichier, 'utf8').split(/\r?\n/).filter(Boolean);
+    return lignes.slice(-12);
+  } catch {
+    return undefined;
+  }
 }
 
 /**

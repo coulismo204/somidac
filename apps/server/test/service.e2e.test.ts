@@ -46,6 +46,8 @@ describe('Service du poste principal', () => {
     const conf = fs.readFileSync(path.join(racine, 'base', 'postgresql.conf'), 'utf8');
     assert.match(conf, /listen_addresses = '127\.0\.0\.1'/);
     assert.ok(!fs.readdirSync(racine).some((f) => f.startsWith('.initdb')), 'le fichier temporaire du mot de passe est supprimé');
+    const journal = fs.readFileSync(path.join(racine, 'journaux', 'serveur.log'), 'utf8');
+    assert.match(journal, /Serveur SOMIDAC prêt/, 'les étapes sont écrites dans le journal du service');
     await arreter();
     assert.equal(pg.enCours(), false, 'PostgreSQL est arrêté avec le service');
   });

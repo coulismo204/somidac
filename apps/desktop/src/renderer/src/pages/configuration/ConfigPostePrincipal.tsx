@@ -179,12 +179,28 @@ function DiagnosticServeur({ etat }: { etat: EtatServeurLocal }) {
       );
     case 'arrete':
       return (
+        <>
         <Message type="attention">
           Le service « SOMIDAC Serveur » est arrêté. Windows le redémarre automatiquement après un échec ; si ce message
           reste affiché, redémarrez le PC. S'il persiste, le journal se trouve dans C:\ProgramData\SOMIDAC\journaux.
         </Message>
+        <JournalServeur lignes={etat.journal} />
+        </>
       );
     default:
       return <Message type="attention">Le serveur SOMIDAC ne répond pas sur ce PC. Nouvelle vérification dans quelques secondes…</Message>;
   }
+}
+
+/** Dernières lignes du journal du serveur, pour comprendre un arrêt (à copier pour l'assistance). */
+function JournalServeur({ lignes }: { lignes?: string[] }) {
+  if (!lignes?.length) return null;
+  return (
+    <details open>
+      <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Dernières lignes du journal du serveur</summary>
+      <pre className="mono" style={{ whiteSpace: 'pre-wrap', background: '#0b1630', color: '#d6e2ff', padding: 12, borderRadius: 8, maxHeight: 220, overflow: 'auto', marginTop: 8 }}>
+        {lignes.join('\n')}
+      </pre>
+    </details>
+  );
 }

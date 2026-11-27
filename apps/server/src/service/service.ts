@@ -1,10 +1,11 @@
 import 'reflect-metadata';
-import { INestApplication, Logger } from '@nestjs/common';
+import { INestApplication, LoggerService } from '@nestjs/common';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { creerApplication } from '../application';
 import { Coffre, CoffreDpapi, CoffreFichier } from '../noyau/pki/coffre';
+import { JournalFichier } from './journal';
 import { PostgresEmbarque } from './postgres';
 
 /**
@@ -37,12 +38,21 @@ export function configServiceParDefaut(env: NodeJS.ProcessEnv = process.env): Co
   };
 }
 
-export async function demarrerService(c: ConfigService): Promise<{ arreter: () => Promise<void>; app: INestApplication }> {
-  const journal = new Logger('Service');
+export function journalDuService(racine: string): JournalFichier {
+  return new JournalFichier(path.join(racine, 'journaux', 'serveur.log'));
+}
+
+export async function demarrerService(
+  c: ConfigService,
+  journalNest: LoggerService = journalDuService(c.racine),
+): Promise<{ arreter: () => Promise<void>; app: INestApplication }> {
+  const journal = { log: (m: string) => journalNest.log(m, 'Service') };
   for (const d of ['base', 'serveur', 'journaux', 'secrets', 'sauvegardes']) {
     fs.mkdirSync(path.join(c.racine, d), { recursive: true });
   }
+  journal.log(`Démarrage du service (données : ${c.racine})`);
 
+  journal.log('Lecture des secrets (chiffrement Windows)…');
   let motDePasseBase = c.coffre.lire('motDePasseBase');
   if (!motDePasseBase) {
     motDePasseBase = crypto.randomBytes(24).toString('base64url');
@@ -60,8 +70,10 @@ export async function demarrerService(c: ConfigService): Promise<{ arreter: () =
     journal.log('Première installation : création de la base de données');
     pg.initialiser(motDePasseBase);
   }
+  journal.log('Démarrage de PostgreSQL…');
   pg.demarrer();
-  pg.creerBase('somidac', motDePasseBase);
+  journal.log('Vérification de la base SOMIDAC…');
+  await pg.creerBase('somidac', motDePasseBase);
   journal.log(`PostgreSQL prêt (127.0.0.1:${c.pgPort})`);
 
   let app: INestApplication;
@@ -77,14 +89,14 @@ export async function demarrerService(c: ConfigService): Promise<{ arreter: () =
         portDecouverte: Number(process.env.SOMIDAC_PORT_DECOUVERTE ?? 7444),
         sauvegardesDir: path.join(c.racine, 'sauvegardes'),
       },
-      { coffre: c.coffre },
+      { coffre: c.coffre, logger: journalNest },
     ));
     await app.listen(c.port, '0.0.0.0');
   } catch (e) {
     pg.arreter();
     throw e;
   }
-  journal.log(`Serveur SOMIDAC démarré sur le port ${c.port}`);
+  journal.log(`Serveur SOMIDAC prêt sur le port ${c.port}`);
 
   let arrete = false;
   const arreter = async () => {
