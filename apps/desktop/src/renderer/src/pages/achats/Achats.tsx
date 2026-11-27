@@ -88,7 +88,7 @@ export function Achats() {
                 <tbody>
                   {liste.map((a) => (
                     <tr key={a.id} className="cliquable" onClick={() => setOuvert(a.id)}>
-                      <td className="mono">{a.numero ?? '—'}</td>
+                      <td className="mono">{a.numero ?? '-'}</td>
                       <td>{formaterJour(a.date)}</td>
                       <td>
                         {a.fournisseur}
@@ -96,7 +96,7 @@ export function Achats() {
                       </td>
                       <td>{a.statut === 'valide' ? <span className="pastille verte">Validé</span> : a.statut === 'brouillon' ? <span className="pastille orange">Brouillon</span> : <span className="pastille grise">Annulé</span>}</td>
                       <td className="nombre">{formaterMontant(a.total)}</td>
-                      <td className="nombre">{a.statut === 'valide' ? formaterMontant(a.total - a.montantPaye) : '—'}</td>
+                      <td className="nombre">{a.statut === 'valide' ? formaterMontant(a.total - a.montantPaye) : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

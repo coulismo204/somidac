@@ -136,8 +136,8 @@ export function Inventaires({ onChangement }: { onChangement: () => void }) {
                     <td><strong>{l.produit}</strong><div className="secondaire">{l.codeProduit}</div></td>
                     <td>{l.lotNumero || 'Sans lot'} {l.datePeremption && <span className="secondaire">· {formaterJour(l.datePeremption)}</span>}</td>
                     <td className="nombre">{l.quantiteTheorique}</td>
-                    <td className="serre">{enCours ? <input className="nombre" type="number" min={0} value={compte ?? ''} onChange={(e) => setSaisies({ ...saisies, [l.id]: e.target.value })} /> : <span className="nombre">{l.quantiteComptee ?? '—'}</span>}</td>
-                    <td className="nombre" style={{ fontWeight: 600, color: ecart ? (ecart < 0 ? 'var(--danger)' : 'var(--succes)') : undefined }}>{ecart == null ? '—' : ecart > 0 ? `+${ecart}` : ecart}</td>
+                    <td className="serre">{enCours ? <input className="nombre" type="number" min={0} value={compte ?? ''} onChange={(e) => setSaisies({ ...saisies, [l.id]: e.target.value })} /> : <span className="nombre">{l.quantiteComptee ?? '-'}</span>}</td>
+                    <td className="nombre" style={{ fontWeight: 600, color: ecart ? (ecart < 0 ? 'var(--danger)' : 'var(--succes)') : undefined }}>{ecart == null ? '-' : ecart > 0 ? `+${ecart}` : ecart}</td>
                   </tr>
                 );
               })}

@@ -53,7 +53,7 @@ jobs:
       - name: Installateur (unique, tous les PC)
         run: node scripts/ci.mjs "Installateur" npm run installateur -w @somidac/desktop
 
-      - name: Test réel — installation silencieuse, puis activation du poste principal
+      - name: Test réel - installation silencieuse, puis activation du poste principal
         shell: pwsh
         run: |
           $exe = Get-ChildItem apps/desktop/release/*.exe | Select-Object -First 1
@@ -104,7 +104,7 @@ jobs:
           if ($reponse -notmatch '"statut":"ok"') { throw 'Le serveur ne redémarre pas' }
           Write-Output 'Installation, activation, découverte et redémarrage : OK'
 
-      - name: Test réel — mise à jour du poste principal (droits cassés réparés, réactivé tout seul)
+      - name: Test réel - mise à jour du poste principal (droits cassés réparés, réactivé tout seul)
         shell: pwsh
         run: |
           # Reproduit l'état laissé par les versions 0.1.x / 0.2.0 : un secret appartenant au service,
@@ -125,7 +125,7 @@ jobs:
           if ($reponse -notmatch '"statut":"ok"') { throw 'Le poste principal ne redémarre pas après mise à jour' }
           Write-Output 'Mise à jour : serveur réactivé'
 
-      - name: Test réel — désinstallation (données conservées)
+      - name: Test réel - désinstallation (données conservées)
         shell: pwsh
         run: |
           $desinstalleur = Get-ChildItem "$env:ProgramFiles\SOMIDAC\Uninstall*.exe" | Select-Object -First 1

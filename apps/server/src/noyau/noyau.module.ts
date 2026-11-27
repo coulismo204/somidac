@@ -12,7 +12,7 @@ import { SequencesModule } from './sequences/sequences.module';
 import { UtilisateursModule } from './utilisateurs/utilisateurs.module';
 
 /**
- * Noyau : ce que tous les modules métier partagent (cahier des charges §4) —
+ * Noyau : ce que tous les modules métier partagent (cahier des charges §4) -
  * connexion et permissions, appareils, audit, numérotation, paramètres, sauvegardes.
  */
 @Module({

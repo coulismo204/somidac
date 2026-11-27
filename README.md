@@ -1,4 +1,4 @@
-# SOMIDAC — Application de gestion
+# SOMIDAC - Application de gestion
 
 Application de gestion Windows pour **SOMIDAC SARL** (distribution cosmétiques & divers produits) :
 achats, stock (lots et péremption), ventes, trésorerie et rapports, sur 2 à 3 postes reliés en Wi-Fi.
@@ -9,15 +9,15 @@ Client–serveur et modulaire dès le premier jour :
 
 ```
 apps/
-  server/    Serveur SOMIDAC (API) — NestJS + PostgreSQL, HTTPS avec TLS mutuel
-  desktop/   Application SOMIDAC (écrans) — Electron + React
+  server/    Serveur SOMIDAC (API) - NestJS + PostgreSQL, HTTPS avec TLS mutuel
+  desktop/   Application SOMIDAC (écrans) - Electron + React
 packages/
   shared/    Contrats partagés : permissions, rôles, modules, schémas de validation
 ```
 
 - Les écrans ne touchent jamais la base : tout passe par l'API, qui applique les règles de gestion.
 - **Noyau** (`apps/server/src/noyau`) : appareils, connexion, permissions, audit, numérotation, paramètres.
-- **Modules métier** (`apps/server/src/modules`) : produits, stock, achats, ventes, trésorerie, rapports —
+- **Modules métier** (`apps/server/src/modules`) : produits, stock, achats, ventes, trésorerie, rapports -
   chacun avec ses tables, activable dans les paramètres.
 
 ## Sécurité (cahier des charges §10)

@@ -16,7 +16,7 @@ import {
 import { sites, utilisateurs } from './noyau';
 
 /*
- * Lot 2 — Produits, fournisseurs, achats et stock (cahier des charges §5.2 à §5.4, §7).
+ * Lot 2 - Produits, fournisseurs, achats et stock (cahier des charges §5.2 à §5.4, §7).
  * Quantités : toujours en pièces entières. Montants : FCFA entiers.
  * Coût moyen pondéré : en centimes de FCFA (le coût d'une pièce peut ne pas tomber juste).
  */

@@ -39,7 +39,7 @@ const LIBELLES_DECLENCHEMENT: Record<string, string> = {
   'avant-restauration': 'Avant restauration',
 };
 
-const taille = (o: number | null) => (o == null ? '—' : o > 1024 * 1024 ? `${(o / 1024 / 1024).toFixed(1)} Mo` : `${Math.ceil(o / 1024)} Ko`);
+const taille = (o: number | null) => (o == null ? '-' : o > 1024 * 1024 ? `${(o / 1024 / 1024).toFixed(1)} Mo` : `${Math.ceil(o / 1024)} Ko`);
 
 /** Première configuration : le mot de passe de restauration. */
 function Configuration({ onFait }: { onFait: () => void }) {
@@ -411,7 +411,7 @@ export function Sauvegardes() {
                     </td>
                     <td>
                       {h.copies.length === 0
-                        ? '—'
+                        ? '-'
                         : h.copies.map((c) => (
                             <div key={c.dossier} className="secondaire" title={c.erreur}>
                               {c.ok ? '✓' : '✗'} {c.dossier}

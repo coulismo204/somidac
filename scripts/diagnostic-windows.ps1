@@ -6,7 +6,7 @@ function Publier([string]$sousTitre, [string]$texte) {
   if (-not $texte) { $texte = '(vide)' }
   if ($texte.Length -gt 5000) { $texte = $texte.Substring($texte.Length - 5000) }
   $texte = $texte.Replace('%', '%25').Replace("`r", '').Replace("`n", '%0A')
-  Write-Output "::error title=$Titre — $sousTitre::$texte"
+  Write-Output "::error title=$Titre - $sousTitre::$texte"
 }
 
 $service = Get-Service SOMIDAC-Serveur -ErrorAction SilentlyContinue | Format-List Name, Status, StartType | Out-String

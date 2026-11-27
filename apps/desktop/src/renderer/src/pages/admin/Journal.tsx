@@ -147,8 +147,8 @@ export function Journal() {
                     <span style={SENSIBLES.test(e.action) ? { color: 'var(--danger)', fontWeight: 600 } : undefined}>{LIBELLES[e.action] ?? e.action}</span>
                     {e.entite && <div className="secondaire">{e.entiteId ? noms[e.entiteId] ?? e.entite : e.entite}</div>}
                   </td>
-                  <td>{e.utilisateurId ? noms[e.utilisateurId] ?? '—' : '—'}</td>
-                  <td>{e.appareilId ? noms[e.appareilId] ?? '—' : '—'}</td>
+                  <td>{e.utilisateurId ? noms[e.utilisateurId] ?? '-' : '-'}</td>
+                  <td>{e.appareilId ? noms[e.appareilId] ?? '-' : '-'}</td>
                 </tr>
               ))}
             </tbody>

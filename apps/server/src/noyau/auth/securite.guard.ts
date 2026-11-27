@@ -22,11 +22,11 @@ import { SessionsService } from './sessions.service';
 
 /**
  * Contrôle unique appliqué à toutes les routes, dans cet ordre :
- * 1. appareil enregistré (certificat client valide et non révoqué) — §10.1
- * 2. session utilisateur valide, non verrouillée — §10.2
+ * 1. appareil enregistré (certificat client valide et non révoqué) - §10.1
+ * 2. session utilisateur valide, non verrouillée - §10.2
  * 3. mot de passe initial changé
- * 4. module métier actif — §4 architecture modulaire
- * 5. permissions du rôle — §3
+ * 4. module métier actif - §4 architecture modulaire
+ * 5. permissions du rôle - §3
  */
 @Injectable()
 export class SecuriteGuard implements CanActivate {

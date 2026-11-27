@@ -76,7 +76,7 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
     const trouve =
       produits.find((p) => p.codesBarres.some((c) => c.code === texte.trim())) ??
       produits.find((p) => p.code.toLowerCase() === t) ??
-      produits.find((p) => `${p.code} — ${p.designation}`.toLowerCase() === t) ??
+      produits.find((p) => `${p.code} - ${p.designation}`.toLowerCase() === t) ??
       produits.find((p) => p.designation.toLowerCase() === t);
     if (!trouve) return;
     const parCode = trouve.codesBarres.find((c) => c.code === texte.trim())?.conditionnementId;
@@ -146,7 +146,7 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
       <div className="entete-page">
         <div>
           <h1>{detail?.numero ?? (idCourant ? 'Achat (brouillon)' : 'Nouvel achat')}</h1>
-          <p>{lectureSeule ? `Achat validé — ${detail?.fournisseur}, le ${formaterJour(detail?.date)}` : 'Le stock n’est modifié qu’à la validation.'}</p>
+          <p>{lectureSeule ? `Achat validé - ${detail?.fournisseur}, le ${formaterJour(detail?.date)}` : 'Le stock n’est modifié qu’à la validation.'}</p>
         </div>
         <button className="bouton secondaire" onClick={() => onFermer(!!idCourant)}>Retour à la liste</button>
       </div>
@@ -157,7 +157,7 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
           <div className="champ">
             <label htmlFor="fournisseur">Fournisseur</label>
             <select id="fournisseur" value={entete.fournisseurId} disabled={lectureSeule} onChange={(e) => setEntete({ ...entete, fournisseurId: e.target.value })}>
-              <option value="">— Choisir —</option>
+              <option value="">- Choisir -</option>
               {fournisseurs.map((f) => <option key={f.id} value={f.id}>{f.nom}</option>)}
             </select>
           </div>
@@ -185,11 +185,11 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
                 value={ajout}
                 onChange={(e) => {
                   setAjout(e.target.value);
-                  if (produits.some((p) => `${p.code} — ${p.designation}` === e.target.value)) ajouterProduit(e.target.value);
+                  if (produits.some((p) => `${p.code} - ${p.designation}` === e.target.value)) ajouterProduit(e.target.value);
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), ajouterProduit(ajout))}
               />
-              <datalist id="liste-produits">{produits.map((p) => <option key={p.id} value={`${p.code} — ${p.designation}`} />)}</datalist>
+              <datalist id="liste-produits">{produits.map((p) => <option key={p.id} value={`${p.code} - ${p.designation}`} />)}</datalist>
             </div>
           )}
         </div>
@@ -228,8 +228,8 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
                     </td>
                     <td className="serre"><input className="nombre" type="number" min={1} value={l.quantite} disabled={lectureSeule} onChange={(e) => majLigne(i, 'quantite', Number(e.target.value))} /></td>
                     <td className="serre"><input className="nombre" type="number" min={0} value={l.prixUnitaire} disabled={lectureSeule} onChange={(e) => majLigne(i, 'prixUnitaire', Number(e.target.value))} /></td>
-                    <td className="serre">{(p?.suiviLot ?? valide?.suiviLot) ? <input value={l.numeroLot} disabled={lectureSeule} placeholder="N° lot" onChange={(e) => majLigne(i, 'numeroLot', e.target.value)} /> : <span className="secondaire">—</span>}</td>
-                    <td className="serre">{(p?.suiviLot ?? valide?.suiviLot) ? <input type="date" value={l.datePeremption} disabled={lectureSeule} onChange={(e) => majLigne(i, 'datePeremption', e.target.value)} /> : <span className="secondaire">—</span>}</td>
+                    <td className="serre">{(p?.suiviLot ?? valide?.suiviLot) ? <input value={l.numeroLot} disabled={lectureSeule} placeholder="N° lot" onChange={(e) => majLigne(i, 'numeroLot', e.target.value)} /> : <span className="secondaire">-</span>}</td>
+                    <td className="serre">{(p?.suiviLot ?? valide?.suiviLot) ? <input type="date" value={l.datePeremption} disabled={lectureSeule} onChange={(e) => majLigne(i, 'datePeremption', e.target.value)} /> : <span className="secondaire">-</span>}</td>
                     <td className="nombre">{formaterMontant(l.quantite * l.prixUnitaire)}</td>
                     {!lectureSeule && (
                       <td className="serre">

@@ -2,7 +2,7 @@
   "name": "somidac",
   "version": "0.1.0",
   "private": true,
-  "description": "Application de gestion SOMIDAC SARL — distribution cosmétiques & divers produits",
+  "description": "Application de gestion SOMIDAC SARL - distribution cosmétiques & divers produits",
   "workspaces": [
     "packages/*",
     "apps/*"

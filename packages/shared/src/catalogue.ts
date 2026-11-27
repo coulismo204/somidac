@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Lot 2 — produits, fournisseurs, achats, stock (cahier des charges §5.2 à §5.4). */
+/** Lot 2 - produits, fournisseurs, achats, stock (cahier des charges §5.2 à §5.4). */
 
 const texteOptionnel = (max: number) => z.string().trim().max(max).optional().nullable().transform((v) => v || null);
 const montantFcfa = z.number().int('Montant en FCFA entiers').min(0).max(100_000_000_000);

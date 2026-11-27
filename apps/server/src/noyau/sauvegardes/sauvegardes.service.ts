@@ -174,7 +174,7 @@ export class SauvegardesService implements OnModuleInit, OnApplicationShutdown {
       .filter((x) => x.erreur)
       .map((x) => `${x.d} : ${x.erreur}`);
     if (problemes.length) {
-      throw new ErreurMetier('DOSSIER_INACCESSIBLE', `Dossier inutilisable — ${problemes.join(' ; ')}`);
+      throw new ErreurMetier('DOSSIER_INACCESSIBLE', `Dossier inutilisable - ${problemes.join(' ; ')}`);
     }
     const avant = await this.parametres.lire();
     await this.db.transaction(async (tx) => {

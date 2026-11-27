@@ -84,7 +84,7 @@ export function Configuration() {
                 </div>
                 <div>
                   <strong>
-                    Rejoindre {t.entreprise} — {t.nomMachine}
+                    Rejoindre {t.entreprise} - {t.nomMachine}
                   </strong>
                   <span>
                     {t.initialise

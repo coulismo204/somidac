@@ -76,7 +76,7 @@ function Ajustement({ produit, onFermer }: { produit: ProduitEtat; onFermer: (fa
   };
   const entree = f.type === 'ajustement' && f.sens === 'entree';
   return (
-    <Modale titre={`Ajuster le stock — ${produit.designation}`} onFermer={() => onFermer(false)}>
+    <Modale titre={`Ajuster le stock - ${produit.designation}`} onFermer={() => onFermer(false)}>
       <form onSubmit={valider} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div className="grille-champs">
           <div className="champ">
@@ -131,7 +131,7 @@ function Historique({ produit, onFermer }: { produit: ProduitEtat; onFermer: () 
     appeler<Mouvement[]>('GET', `/stock/produits/${produit.id}/mouvements`).then(setMvts).catch(() => setMvts([]));
   }, [appeler, produit.id]);
   return (
-    <Modale titre={`Mouvements — ${produit.designation}`} onFermer={onFermer} large>
+    <Modale titre={`Mouvements - ${produit.designation}`} onFermer={onFermer} large>
       {!mvts ? (
         <div className="vide">Chargement…</div>
       ) : mvts.length === 0 ? (
@@ -155,7 +155,7 @@ function Historique({ produit, onFermer }: { produit: ProduitEtat; onFermer: () 
                   {TYPES[m.type] ?? m.type}
                   {m.motif && <div className="secondaire">{m.motif}</div>}
                 </td>
-                <td>{m.lotNumero || '—'} {m.lotPeremption ? <span className="secondaire">· {formaterJour(m.lotPeremption)}</span> : null}</td>
+                <td>{m.lotNumero || '-'} {m.lotPeremption ? <span className="secondaire">· {formaterJour(m.lotPeremption)}</span> : null}</td>
                 <td className="nombre" style={{ color: m.quantite < 0 ? 'var(--danger)' : 'var(--succes)', fontWeight: 600 }}>{m.quantite > 0 ? `+${m.quantite}` : m.quantite}</td>
                 {peut('couts.voir') && <td className="nombre">{formaterMontant(m.cout)}</td>}
               </tr>
@@ -247,7 +247,7 @@ export function Stock() {
                         <div className="secondaire">{p.code} · {p.categorie}</div>
                       </td>
                       <td>
-                        {p.lots.length === 0 ? <span className="secondaire">—</span> : p.lots.map((l) => (
+                        {p.lots.length === 0 ? <span className="secondaire">-</span> : p.lots.map((l) => (
                           <div key={l.id} style={{ fontSize: 12 }}>
                             <span className={l.perime ? 'pastille rouge' : l.bientotPerime ? 'pastille orange' : ''} style={l.perime || l.bientotPerime ? { padding: '1px 8px' } : undefined}>
                               {l.numero || 'Sans lot'}{l.datePeremption ? ` · ${formaterJour(l.datePeremption)}` : ''}

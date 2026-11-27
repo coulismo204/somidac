@@ -161,14 +161,14 @@ export function Appareils() {
                     <strong>{a.nom}</strong>
                     {a.id === poste?.appareilId && <span className="etiquette" style={{ marginLeft: 8 }}>Cet appareil</span>}
                     <div className="secondaire">
-                      {a.infosSysteme?.nomMachine ?? '—'} {a.infosSysteme?.systeme ? `· ${a.infosSysteme.systeme}` : ''}
+                      {a.infosSysteme?.nomMachine ?? '-'} {a.infosSysteme?.systeme ? `· ${a.infosSysteme.systeme}` : ''}
                     </div>
                   </td>
                   <td>
                     <Statut a={a} />
                     {a.statut === 'revoque' && <div className="secondaire">le {formaterDateHeure(a.revoqueLe)}</div>}
                   </td>
-                  <td title={formaterDateHeure(a.derniereConnexion)}>{a.derniereConnexion ? relatif(a.derniereConnexion) : '—'}</td>
+                  <td title={formaterDateHeure(a.derniereConnexion)}>{a.derniereConnexion ? relatif(a.derniereConnexion) : '-'}</td>
                   <td>{formaterDate(a.certificatExpireLe)}</td>
                   <td>
                     <div className="actions-ligne">

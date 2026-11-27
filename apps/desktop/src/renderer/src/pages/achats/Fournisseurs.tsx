@@ -77,8 +77,8 @@ export function Fournisseurs() {
                     {!f.actif && <span className="pastille grise" style={{ marginLeft: 8 }}>Désactivé</span>}
                     {f.adresse && <div className="secondaire">{f.adresse}</div>}
                   </td>
-                  <td>{f.telephone ?? '—'}</td>
-                  <td>{f.nif ?? '—'}</td>
+                  <td>{f.telephone ?? '-'}</td>
+                  <td>{f.nif ?? '-'}</td>
                   <td className="nombre">{f.resteDu > 0 ? <strong>{formaterMontant(f.resteDu)}</strong> : formaterMontant(0)}</td>
                 </tr>
               ))}

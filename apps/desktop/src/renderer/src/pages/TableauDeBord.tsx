@@ -49,12 +49,12 @@ export function TableauDeBord() {
       <div className="grille-cartes" style={{ marginBottom: 20 }}>
         <div className="carte indicateur">
           <div className="libelle">Ventes du jour</div>
-          <div className="valeur">—</div>
+          <div className="valeur">-</div>
           <div className="detail">Disponible avec le module Ventes (lot 3)</div>
         </div>
         <a className="carte indicateur" href="#/stock" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="libelle">Stock bas</div>
-          <div className="valeur" style={{ color: stock?.stockBas ? 'var(--alerte)' : undefined }}>{stock ? stock.stockBas : '—'}</div>
+          <div className="valeur" style={{ color: stock?.stockBas ? 'var(--alerte)' : undefined }}>{stock ? stock.stockBas : '-'}</div>
           <div className="detail">
             {stock ? `${stock.lotsBientotPerimes} lot(s) à écouler, ${stock.lotsPerimes} périmé(s)` : 'Module Stock désactivé'}
             {stock?.valeurTotale !== undefined ? ` · valeur ${formaterMontant(stock.valeurTotale)}` : ''}
@@ -62,7 +62,7 @@ export function TableauDeBord() {
         </a>
         <div className="carte indicateur">
           <div className="libelle">Trésorerie</div>
-          <div className="valeur">—</div>
+          <div className="valeur">-</div>
           <div className="detail">Disponible avec le module Trésorerie (lot 4)</div>
         </div>
         <div className="carte indicateur">

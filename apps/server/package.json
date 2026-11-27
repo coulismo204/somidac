@@ -2,7 +2,7 @@
   "name": "@somidac/server",
   "version": "0.1.0",
   "private": true,
-  "description": "Serveur SOMIDAC (API) — règles de gestion, droits, numérotation, temps réel",
+  "description": "Serveur SOMIDAC (API) - règles de gestion, droits, numérotation, temps réel",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

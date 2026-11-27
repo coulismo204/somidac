@@ -101,7 +101,7 @@ export function FicheProduit({ produit, onFermer, onEnregistre }: { produit?: Pr
   };
 
   return (
-    <Modale titre={produit ? `${produit.code} — ${produit.designation}` : 'Nouveau produit'} onFermer={onFermer} large>
+    <Modale titre={produit ? `${produit.code} - ${produit.designation}` : 'Nouveau produit'} onFermer={onFermer} large>
       <form onSubmit={enregistrer} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div className="grille-champs">
           <Champ className="pleine" libelle="Désignation" value={f.designation} onChange={(e) => setF({ ...f, designation: e.target.value })} required autoFocus />
@@ -116,7 +116,7 @@ export function FicheProduit({ produit, onFermer, onEnregistre }: { produit?: Pr
               }}
               required
             >
-              <option value="">— Choisir —</option>
+              <option value="">- Choisir -</option>
               <optgroup label="Cosmétique">{categories.filter((c) => c.type === 'cosmetique').map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}</optgroup>
               <optgroup label="Bazar">{categories.filter((c) => c.type === 'bazar').map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}</optgroup>
             </select>
