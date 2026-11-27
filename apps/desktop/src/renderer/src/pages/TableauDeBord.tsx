@@ -15,12 +15,19 @@ export function TableauDeBord() {
   const [p, setP] = useState<Parametres>();
   const [alertesSauvegarde, setAlertesSauvegarde] = useState<string[]>([]);
   const [stock, setStock] = useState<{ stockBas: number; lotsBientotPerimes: number; lotsPerimes: number; valeurTotale?: number }>();
+  const [ventes, setVentes] = useState<{ caJour: number; caMois: number; livraisonsJour: number; livraisonsMois: number; bonsAFacturer: number; facturesNonSoldees: number; resteDuClients: number }>();
+  const [ventesErreur, setVentesErreur] = useState<string>();
 
   useEffect(() => {
     appeler<Parametres>('GET', '/parametres').then(setP).catch(() => undefined);
     appeler<{ resume: { stockBas: number; lotsBientotPerimes: number; lotsPerimes: number; valeurTotale?: number } }>('GET', '/stock')
       .then((e) => setStock(e.resume))
       .catch(() => undefined);
+    if (peut('tableau_de_bord.complet')) {
+      appeler<NonNullable<typeof ventes>>('GET', '/ventes/resume')
+        .then(setVentes)
+        .catch((e) => setVentesErreur(e?.code === 'MODULE_DESACTIVE' ? 'Module Ventes désactivé' : 'Indisponible'));
+    }
     if (peut('admin.sauvegardes')) {
       appeler<{ alertes: string[] }>('GET', '/sauvegardes').then((e) => setAlertesSauvegarde(e.alertes)).catch(() => undefined);
     }
@@ -47,11 +54,24 @@ export function TableauDeBord() {
         </div>
       ))}
       <div className="grille-cartes" style={{ marginBottom: 20 }}>
-        <div className="carte indicateur">
-          <div className="libelle">Ventes du jour</div>
-          <div className="valeur">-</div>
-          <div className="detail">Disponible avec le module Ventes (lot 3)</div>
-        </div>
+        <a className="carte indicateur cliquable" href="#/ventes">
+          <div className="libelle">Ventes du jour (HT)</div>
+          <div className="valeur">{ventes ? formaterMontant(ventes.caJour) : '-'}</div>
+          <div className="detail">
+            {ventes
+              ? `${ventes.livraisonsJour} livraison(s) · mois : ${formaterMontant(ventes.caMois)}`
+              : ventesErreur ?? (peut('tableau_de_bord.complet') ? 'Chargement…' : 'Chiffres réservés au gérant et au caissier')}
+          </div>
+        </a>
+        {ventes && (
+          <a className="carte indicateur cliquable" href="#/ventes">
+            <div className="libelle">À encaisser</div>
+            <div className="valeur" style={{ color: ventes.resteDuClients ? 'var(--alerte)' : undefined }}>{formaterMontant(ventes.resteDuClients)}</div>
+            <div className="detail">
+              {ventes.facturesNonSoldees} facture(s) non soldée(s){ventes.bonsAFacturer ? ` · ${ventes.bonsAFacturer} bon(s) à facturer` : ''}
+            </div>
+          </a>
+        )}
         <a className="carte indicateur" href="#/stock" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="libelle">Stock bas</div>
           <div className="valeur" style={{ color: stock?.stockBas ? 'var(--alerte)' : undefined }}>{stock ? stock.stockBas : '-'}</div>
@@ -72,8 +92,8 @@ export function TableauDeBord() {
         </div>
       </div>
       <Message type="info">
-        Produits, achats et stock sont disponibles. Les ventes (bons de livraison et factures) arrivent au lot 3, la
-        trésorerie au lot 4.
+        Produits, achats, stock et ventes (bons de livraison, factures, avoirs) sont disponibles. L’encaissement des
+        factures et la trésorerie arrivent au lot 4.
       </Message>
     </>
   );

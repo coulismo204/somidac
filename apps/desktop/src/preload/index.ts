@@ -20,6 +20,10 @@ const api: ApiSomidac = {
   api: {
     appeler: (methode, chemin, corps) => ipcRenderer.invoke(CANAUX.APPELER, methode, chemin, corps),
   },
+  documents: {
+    imprimer: () => ipcRenderer.invoke(CANAUX.IMPRIMER),
+    enregistrerPdf: (nomFichier) => ipcRenderer.invoke(CANAUX.PDF, nomFichier),
+  },
 };
 
 contextBridge.exposeInMainWorld('somidac', api);

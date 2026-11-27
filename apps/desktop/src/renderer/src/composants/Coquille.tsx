@@ -12,7 +12,7 @@ const MODULES_METIER: { chemin: string; libelle: string; icone: string; module: 
   { chemin: '/produits', libelle: 'Produits', icone: 'produits', module: 'produits' },
   { chemin: '/stock', libelle: 'Stock', icone: 'stock', module: 'stock' },
   { chemin: '/achats', libelle: 'Achats', icone: 'achats', module: 'achats', permission: 'achats.saisir' },
-  { chemin: '/ventes', libelle: 'Ventes', icone: 'ventes', module: 'ventes', lot: 3 },
+  { chemin: '/ventes', libelle: 'Ventes', icone: 'ventes', module: 'ventes', permission: 'ventes.saisir' },
   { chemin: '/tresorerie', libelle: 'Trésorerie', icone: 'tresorerie', module: 'tresorerie', lot: 4 },
   { chemin: '/rapports', libelle: 'Rapports', icone: 'rapports', module: 'rapports', lot: 5 },
 ];

@@ -81,6 +81,12 @@ export interface ApiSomidac {
   api: {
     appeler<T = unknown>(methode: string, chemin: string, corps?: unknown): Promise<Resultat<ReponseApi<T>>>;
   };
+  /** Documents imprimés (§8) : la page affiche le document dans sa zone d'impression avant l'appel. */
+  documents: {
+    imprimer(): Promise<Resultat<void>>;
+    /** Enregistre en PDF A4 ; renvoie le chemin du fichier, ou null si l'utilisateur annule. */
+    enregistrerPdf(nomFichier: string): Promise<Resultat<string | null>>;
+  };
 }
 
 export const CANAUX = {
@@ -96,4 +102,6 @@ export const CANAUX = {
   CONNECTER: 'session:connecter',
   DECONNECTER: 'session:deconnecter',
   APPELER: 'api:appeler',
+  IMPRIMER: 'documents:imprimer',
+  PDF: 'documents:pdf',
 } as const;

@@ -246,3 +246,53 @@ table.tableau { width: 100%; border-collapse: collapse; }
 .totaux .total { font-weight: 700; font-size: 16px; color: var(--bleu-nuit); }
 .sous-ligne { background: #fafbfe; }
 .sous-ligne td { font-size: 12px; color: var(--texte-2); padding-top: 6px; padding-bottom: 6px; }
+
+/* ---------- Lot 3 : ventes ---------- */
+.pastille.bleue { background: var(--bleu-clair); color: var(--bleu); }
+.indicateur.cliquable { text-decoration: none; color: inherit; }
+
+/* ---------- Documents imprimés (§8) : A4, bleu roi et or ---------- */
+#zone-impression { display: none; }
+.apercu-document { background: #e9edf5; padding: 16px; border-radius: 8px; display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.apercu-document .doc { box-shadow: var(--ombre); width: 100%; max-width: 794px; }
+.doc {
+  background: #fff; color: #1a2233; padding: 34px 38px; font-size: 12px; line-height: 1.4;
+  display: flex; flex-direction: column; gap: 14px; min-height: 1000px;
+}
+.doc-entete { display: flex; justify-content: space-between; gap: 20px; padding-bottom: 12px; border-bottom: 3px solid var(--bleu); }
+.doc-emetteur { display: flex; gap: 14px; align-items: flex-start; color: #4a5468; font-size: 11px; }
+.doc-emetteur img { width: 74px; height: 74px; object-fit: contain; }
+.doc-raison { font-size: 17px; font-weight: 700; color: var(--bleu-nuit); }
+.doc-slogan { color: var(--or-fonce); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2px; }
+.doc-titre { text-align: right; }
+.doc-type { font-size: 20px; font-weight: 700; color: var(--bleu); text-transform: uppercase; letter-spacing: 1px; }
+.doc-numero { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 13px; font-weight: 700; color: var(--bleu-nuit); margin: 2px 0; }
+.doc-mention { display: inline-block; margin-top: 6px; padding: 2px 8px; border: 1px solid var(--or); color: var(--or-fonce); border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.doc-bandeau { display: flex; justify-content: space-between; gap: 20px; }
+.doc-tiers { border-left: 3px solid var(--or); padding: 6px 12px; background: #fbf8ef; min-width: 46%; }
+.doc-tiers strong { font-size: 13px; color: var(--bleu-nuit); }
+.doc-libelle { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #7a8399; margin-bottom: 2px; }
+.doc-references { text-align: right; display: flex; flex-direction: column; gap: 3px; }
+.doc-references span { color: #7a8399; }
+.doc-table { width: 100%; border-collapse: collapse; }
+.doc-table th { background: var(--bleu); color: #fff; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 8px; text-align: left; }
+.doc-table th.nombre { text-align: right; }
+.doc-table td { padding: 6px 8px; border-bottom: 1px solid #e3e7ef; vertical-align: top; }
+.doc-table tr { break-inside: avoid; }
+.doc-detail { color: #7a8399; font-size: 10.5px; }
+.doc-totaux { display: grid; grid-template-columns: auto auto; gap: 4px 28px; justify-content: end; font-variant-numeric: tabular-nums; break-inside: avoid; }
+.doc-total { font-weight: 700; font-size: 14px; color: var(--bleu-nuit); border-top: 2px solid var(--or); padding-top: 4px; }
+.doc-lettres { padding: 8px 12px; background: #f4f6fb; border-radius: 4px; }
+.doc-notes { color: #4a5468; }
+.doc-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px; break-inside: avoid; }
+.doc-case { height: 80px; border: 1px dashed #b8c0d0; border-radius: 4px; padding: 6px 8px; color: #9aa3b5; font-size: 10px; }
+.doc-pied { margin-top: auto; border-top: 1px solid #e3e7ef; padding-top: 8px; text-align: center; color: #7a8399; font-size: 10px; }
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  :root, html, body { height: auto; background: #fff; }
+  #racine { display: none !important; }
+  #zone-impression { display: block; }
+  .doc { padding: 0; min-height: 270mm; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .doc + .doc { break-before: page; }
+}

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, Menu, safeStorage, session, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent, Menu, safeStorage, session, shell, WebContents } from 'electron';
 import { spawn, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -98,10 +98,15 @@ function origineAutorisee(evenement: IpcMainInvokeEvent): boolean {
 }
 
 function gerer<A extends unknown[], T>(canal: string, action: (...args: A) => Promise<T> | T) {
+  gererPourEcran<A, T>(canal, (_ecran, ...args) => action(...args));
+}
+
+/** Comme `gerer`, en donnant accès à l'écran qui appelle (impression de sa page). */
+function gererPourEcran<A extends unknown[], T>(canal: string, action: (ecran: WebContents, ...args: A) => Promise<T> | T) {
   ipcMain.handle(canal, async (evenement, ...args): Promise<Resultat<T>> => {
     if (!origineAutorisee(evenement)) return { ok: false, code: 'ORIGINE_REFUSEE', message: 'Appel refusé' };
     try {
-      return { ok: true, valeur: await action(...(args as A)) };
+      return { ok: true, valeur: await action(evenement.sender, ...(args as A)) };
     } catch (e) {
       if (e instanceof ErreurPoste) return { ok: false, code: e.code, message: e.message };
       if (e instanceof ErreurReseau) return { ok: false, code: 'SERVEUR_INJOIGNABLE', message: e.message };
@@ -109,6 +114,37 @@ function gerer<A extends unknown[], T>(canal: string, action: (...args: A) => Pr
       return { ok: false, code: 'ERREUR_INTERNE', message: 'Une erreur inattendue est survenue.' };
     }
   });
+}
+
+/** Impression du document affiché (boîte de dialogue de Windows : imprimante, nombre de copies). */
+function imprimer(ecran: WebContents): Promise<void> {
+  return new Promise((resolve, reject) => {
+    ecran.print({ printBackground: true }, (reussi, raison) => {
+      if (reussi || /cancel/i.test(raison)) resolve();
+      else reject(new ErreurPoste('IMPRESSION_IMPOSSIBLE', `Impression impossible : ${raison}`));
+    });
+  });
+}
+
+/** PDF A4 du document affiché, enregistré là où l'utilisateur le choisit (Documents\SOMIDAC par défaut). */
+async function enregistrerPdf(ecran: WebContents, nomFichier: string): Promise<string | null> {
+  const nom = String(nomFichier ?? '').replace(/[^\w.-]+/g, '_').slice(0, 80) || 'document';
+  const donnees = await ecran.printToPDF({ pageSize: 'A4', printBackground: true, preferCSSPageSize: true });
+  const dossier = path.join(app.getPath('documents'), 'SOMIDAC');
+  fs.mkdirSync(dossier, { recursive: true });
+  const parent = BrowserWindow.fromWebContents(ecran);
+  const options = { title: 'Enregistrer le document en PDF', defaultPath: path.join(dossier, `${nom}.pdf`), filters: [{ name: 'Document PDF', extensions: ['pdf'] }] };
+  const choix = parent ? await dialog.showSaveDialog(parent, options) : await dialog.showSaveDialog(options);
+  if (choix.canceled || !choix.filePath) return null;
+  const fichier = choix.filePath.toLowerCase().endsWith('.pdf') ? choix.filePath : `${choix.filePath}.pdf`;
+  try {
+    fs.writeFileSync(fichier, donnees);
+  } catch (e) {
+    throw new ErreurPoste('PDF_IMPOSSIBLE', `Impossible d'écrire le fichier : ${(e as Error).message}`);
+  }
+  // Ouvre le dossier : le fichier est prêt à être joint à un e-mail ou envoyé par WhatsApp.
+  shell.showItemInFolder(fichier);
+  return fichier;
 }
 
 function enregistrerCanaux() {
@@ -127,6 +163,8 @@ function enregistrerCanaux() {
   gerer(CANAUX.OUBLIER, () => poste.oublier());
   gerer(CANAUX.CONNECTER, (identifiant: string, motDePasse: string) => poste.connecter(identifiant, motDePasse));
   gerer(CANAUX.DECONNECTER, () => poste.deconnecter());
+  gererPourEcran(CANAUX.IMPRIMER, (ecran) => imprimer(ecran));
+  gererPourEcran(CANAUX.PDF, (ecran, nomFichier: string) => enregistrerPdf(ecran, nomFichier));
   gerer(CANAUX.APPELER, (methode: string, chemin: string, corps?: unknown) => {
     if (!/^(GET|POST|PUT|PATCH|DELETE)$/.test(methode) || !chemin.startsWith('/')) {
       throw new ErreurPoste('APPEL_INVALIDE', 'Appel invalide');

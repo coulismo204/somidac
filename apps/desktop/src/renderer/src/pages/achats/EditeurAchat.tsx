@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icone, Message, Modale } from '../../composants/communs';
+import { ApercuDocument, DocumentBonReception, useEntreprise } from '../../composants/Documents';
 import { messageErreur, useSession } from '../../contexte';
 import { aujourdhuiIso, formaterJour, formaterMontant, formaterNombre } from '../../format';
 import type { Produit } from '../produits/FicheProduit';
@@ -48,11 +49,15 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
   const [envoi, setEnvoi] = useState(false);
   const [confirmer, setConfirmer] = useState(false);
   const [idCourant, setIdCourant] = useState(id);
+  const [imprimer, setImprimer] = useState(false);
+  const [tousFournisseurs, setTousFournisseurs] = useState<Fournisseur[]>([]);
+  const entreprise = useEntreprise();
 
   useEffect(() => {
     void (async () => {
       const [f, p] = await Promise.all([appeler<Fournisseur[]>('GET', '/fournisseurs'), appeler<Produit[]>('GET', '/produits')]);
       setFournisseurs(f.filter((x) => x.actif));
+      setTousFournisseurs(f);
       setProduits(p);
       if (id) {
         const d = await appeler<AchatDetail>('GET', `/achats/${id}`);
@@ -148,7 +153,10 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
           <h1>{detail?.numero ?? (idCourant ? 'Achat (brouillon)' : 'Nouvel achat')}</h1>
           <p>{lectureSeule ? `Achat validé - ${detail?.fournisseur}, le ${formaterJour(detail?.date)}` : 'Le stock n’est modifié qu’à la validation.'}</p>
         </div>
-        <button className="bouton secondaire" onClick={() => onFermer(!!idCourant)}>Retour à la liste</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {lectureSeule && <button className="bouton secondaire" onClick={() => setImprimer(true)}>Imprimer le bon de réception</button>}
+          <button className="bouton secondaire" onClick={() => onFermer(!!idCourant)}>Retour à la liste</button>
+        </div>
       </div>
       <Message type="erreur">{erreur}</Message>
 
@@ -310,6 +318,20 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
             l'achat recevra son numéro définitif. <strong>Il ne pourra plus être modifié.</strong>
           </p>
         </Modale>
+      )}
+    {imprimer && detail && entreprise && (
+        <ApercuDocument titre={`Bon de réception ${detail.numero}`} nomFichier={`Reception-${detail.numero}`} onFermer={() => setImprimer(false)}>
+          <DocumentBonReception
+            e={entreprise}
+            r={{
+              numero: detail.numero,
+              date: detail.date,
+              referenceFournisseur: detail.referenceFournisseur,
+              fournisseur: tousFournisseurs.find((f) => f.id === detail.fournisseurId) ?? { nom: detail.fournisseur },
+              lignes: detail.lignes,
+            }}
+          />
+        </ApercuDocument>
       )}
     </>
   );
