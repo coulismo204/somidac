@@ -1,6 +1,6 @@
 {
   "name": "@somidac/desktop",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Application SOMIDAC (écrans) - postes principal et secondaires",
   "main": "out/main/index.js",
