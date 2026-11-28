@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
+import { anneePrecedente, clesPeriode } from '../src/modules/rapports/synthese.service';
 import { demarrerServeur, IdentiteAppareil, initialiserAvecGerant, requete, ServeurTest, viderBase } from './outils';
 
 /**
@@ -162,6 +163,40 @@ describe('Rapports et tableau de bord', () => {
     const a = (await g('GET', '/tableau-de-bord')).corps.alertes;
     assert.deepEqual(a.ecartsCaisse.map((e: { ecart: number }) => e.ecart), [-6_000]);
     assert.ok(a.horsHeures > 0);
+  });
+
+  it('synthèse du tableau de bord : indicateurs, évolution, classements, filtres', async () => {
+    assert.equal(anneePrecedente('2028-02-29'), '2027-02-28');
+    assert.deepEqual(clesPeriode('2026-11-28', '2027-02-03', 'mois'), ['2026-11', '2026-12', '2027-01', '2027-02']);
+    const s = (await g('GET', `/tableau-de-bord/synthese?du=${jour}&au=${jour}`)).corps;
+    assert.equal(s.indicateurs.ca.valeur, 13_400);
+    assert.equal(s.indicateurs.ca.variation, null, 'aucune vente l’an dernier : pas de pourcentage');
+    assert.equal(s.indicateurs.marge.valeur, 4_600);
+    assert.equal(s.indicateurs.ventes.valeur, 2);
+    assert.equal(s.indicateurs.panierMoyen.valeur, 6_700);
+    assert.deepEqual(s.serie, [{ cle: jour, ca: 13_400, caN1: 0, marge: 4_600, margeN1: 0 }]);
+    assert.deepEqual(s.produits.map((p: { libelle: string; ca: number }) => [p.libelle, p.ca]), [['Savon', 8_000], ['Seau', 5_400]]);
+    assert.deepEqual(s.categories.map((c: { libelle: string; ca: number }) => [c.libelle, c.ca]), [['Soins du corps', 8_000], ['Ménage et entretien', 5_400]]);
+    const bonPrix = s.clients.find((c: { libelle: string }) => c.libelle === 'Bon Prix');
+    assert.equal(bonPrix.ca, 8_000);
+    assert.equal(bonPrix.avoirs, 2_000);
+    assert.equal(s.stock.valeurCout, 91 * 600 + 18 * 2_000);
+    assert.equal(s.stock.valeurVente, 91 * 1_000 + 18 * 3_000);
+
+    const cat = s.categories[1].id;
+    const filtre = (await g('GET', `/tableau-de-bord/synthese?du=${jour}&au=${jour}&categorieId=${cat}`)).corps;
+    assert.equal(filtre.indicateurs.ca.valeur, 5_400);
+    assert.equal(filtre.produits.length, 1);
+    assert.equal(filtre.stock.valeurCout, 18 * 2_000);
+    const mois = (await g('GET', `/tableau-de-bord/synthese?du=${jour}&au=${jour}&granularite=mois`)).corps;
+    assert.deepEqual(mois.serie.map((x: { cle: string }) => x.cle), [jour.slice(0, 7)]);
+
+    const c = (await en('awa')('GET', `/tableau-de-bord/synthese?du=${jour}&au=${jour}`)).corps;
+    assert.equal(c.sesVentesSeulement, true);
+    assert.equal(c.indicateurs.ca.valeur, 5_400);
+    assert.equal(c.indicateurs.marge, undefined);
+    assert.equal(c.stock.valeurCout, undefined);
+    assert.equal((await en('moussa')('GET', '/tableau-de-bord/synthese')).statut, 403);
   });
 
   it('tableau de bord selon le rôle (§5.1)', async () => {

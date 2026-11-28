@@ -5,6 +5,7 @@ import { ErreurMetier } from '../../noyau/commun/erreurs';
 import type { UtilisateurConnecte } from '../../noyau/commun/requete';
 import { aujourdhui } from '../stock/stock.service';
 import { GroupeVentes, RapportsService } from './rapports.service';
+import { SyntheseService } from './synthese.service';
 import { TableauDeBordService } from './tableau-de-bord.service';
 
 const JOUR = /^\d{4}-\d{2}-\d{2}$/;
@@ -72,10 +73,38 @@ export class RapportsController {
 /** Le tableau de bord appartient au noyau : chaque bloc dépend de son propre module. */
 @Controller('tableau-de-bord')
 export class TableauDeBordController {
-  constructor(private readonly service: TableauDeBordService) {}
+  constructor(
+    private readonly service: TableauDeBordService,
+    private readonly synthese: SyntheseService,
+  ) {}
 
   @Get()
   construire(@UtilisateurCourant() u: UtilisateurConnecte) {
     return this.service.construire(u);
+  }
+
+  /** Synthèse des ventes (indicateurs vs an dernier, évolution, classements), filtrée. */
+  @Get('synthese')
+  async syntheseVentes(
+    @UtilisateurCourant() u: UtilisateurConnecte,
+    @Query('du') du?: string,
+    @Query('au') au?: string,
+    @Query('granularite') granularite?: string,
+    @Query('categorieId') categorieId?: string,
+    @Query('produitId') produitId?: string,
+    @Query('clientId') clientId?: string,
+  ) {
+    exigerUne(u, PERMISSIONS.TABLEAU_DE_BORD_COMPLET, PERMISSIONS.RAPPORTS_SES_VENTES);
+    const p = periode(du, au);
+    const uuid = (v?: string) => (v && /^[0-9a-f-]{36}$/i.test(v) ? v : undefined);
+    const f = {
+      ...p,
+      granularite: (['jour', 'mois', 'annee'] as const).find((g) => g === granularite),
+      categorieId: uuid(categorieId),
+      produitId: uuid(produitId),
+      clientId: uuid(clientId),
+    };
+    const [ventes, stock] = await Promise.all([this.synthese.construire(f, u), this.synthese.stock(f, u)]);
+    return { ...ventes, stock };
   }
 }

@@ -56,7 +56,7 @@ export class RapportsService {
   }
 
   /** Lignes de ventes de la période (factures moins avoirs), base de tous les rapports de ventes. */
-  private baseVentes(du: string, au: string, vendeurId?: string) {
+  baseVentes(du: string, au: string, vendeurId?: string) {
     const filtreVendeur = vendeurId ? sql`AND bl.cree_par = ${vendeurId}` : sql``;
     return sql`
       SELECT f.date AS jour, f.client_id, fl.produit_id, bl.cree_par AS vendeur_id, f.id AS facture_id,
