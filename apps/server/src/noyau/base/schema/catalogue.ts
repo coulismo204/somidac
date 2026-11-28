@@ -202,6 +202,8 @@ export const achats = pgTable(
     total: montant('total').notNull().default(0),
     /** Payé au fournisseur à l'achat (les paiements détaillés arrivent avec la trésorerie, lot 4). */
     montantPaye: montant('montant_paye').notNull().default(0),
+    /** Compte de trésorerie qui paie le montant réglé à l'achat (lot 4). */
+    comptePaiementId: uuid('compte_paiement_id'),
     notes: text('notes'),
     creePar: uuid('cree_par').references(() => utilisateurs.id),
     creeLe: horodatage('cree_le').notNull().defaultNow(),

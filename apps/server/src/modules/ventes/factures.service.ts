@@ -8,9 +8,12 @@ import {
   avoirs,
   bonsLivraison,
   clients,
+  comptesTresorerie,
   conditionnements,
   factureLignes,
   factures,
+  paiementAffectations,
+  paiements,
   produits,
 } from '../../noyau/base/schema';
 import { ErreurMetier } from '../../noyau/commun/erreurs';
@@ -95,6 +98,13 @@ export class FacturesService {
       .from(avoirs)
       .where(eq(avoirs.factureId, id))
       .orderBy(asc(avoirs.numero));
+    const reglements = await this.db
+      .select({ id: paiements.id, numero: paiements.numero, date: paiements.date, montant: paiementAffectations.montant, statut: paiements.statut, compte: comptesTresorerie.nom })
+      .from(paiementAffectations)
+      .innerJoin(paiements, eq(paiements.id, paiementAffectations.paiementId))
+      .innerJoin(comptesTresorerie, eq(comptesTresorerie.id, paiements.compteId))
+      .where(eq(paiementAffectations.factureId, id))
+      .orderBy(asc(paiements.creeLe));
     const cout = Math.round(lignes.reduce((t, x) => t + x.l.quantitePieces * x.l.coutPieceCentimes, 0) / 100);
     return {
       ...r.f,
@@ -123,6 +133,7 @@ export class FacturesService {
         };
       }),
       avoirs: listeAvoirs,
+      paiements: reglements,
       ...(voirCouts ? { cout, marge: r.f.totalHT - cout } : {}),
     };
   }

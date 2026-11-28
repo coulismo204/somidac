@@ -213,7 +213,7 @@ export class SauvegardesService implements OnModuleInit, OnApplicationShutdown {
 
   // ---------------------------------------------------------------- sauvegarde
 
-  async sauvegarder(declenchement: 'automatique' | 'manuelle' | 'avant-restauration', utilisateurId: string | null, appareilId: string | null) {
+  async sauvegarder(declenchement: 'automatique' | 'manuelle' | 'avant-restauration' | 'cloture-caisse', utilisateurId: string | null, appareilId: string | null) {
     if (this.enCours) throw new ErreurMetier('SAUVEGARDE_EN_COURS', 'Une sauvegarde est déjà en cours', HttpStatus.CONFLICT);
     this.enCours = true;
     const debut = Date.now();

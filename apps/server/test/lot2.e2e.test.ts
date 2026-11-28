@@ -38,6 +38,9 @@ describe('Produits, achats et stock', () => {
     const c = await requete(srv, 'POST', '/auth/connexion', { appareil: gerant.poste, corps: { identifiant: 'moussa', motDePasse: 'Initial#2026' } });
     jetonMagasinier = c.corps.jeton;
     await mag('POST', '/auth/mot-de-passe', { ancienMotDePasse: 'Initial#2026', nouveauMotDePasse: 'Magasin#2026' });
+    // Depuis le lot 4, ce qui est réglé au grossiste sort de la caisse : on y met un fonds de départ.
+    const caisse = (await g('GET', '/tresorerie/comptes')).corps[0];
+    await g('PUT', `/tresorerie/comptes/${caisse.id}`, { nom: caisse.nom, type: 'caisse', soldeInitial: 1_000_000 });
   });
   after(async () => srv?.arreter());
 

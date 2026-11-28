@@ -71,6 +71,8 @@ export const achatSchema = z.object({
   referenceFournisseur: texteOptionnel(60),
   notes: texteOptionnel(500),
   montantPaye: montantFcfa.default(0),
+  /** Compte qui paie le montant réglé à l'achat (caisse par défaut). */
+  comptePaiementId: z.string().uuid().nullable().optional(),
   lignes: z.array(ligneAchatSchema).max(300),
   frais: z.array(z.object({ libelle: z.string().trim().min(1).max(80), montant: montantFcfa })).max(20).default([]),
 });

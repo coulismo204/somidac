@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { INestApplication, LoggerService, NestApplicationOptions } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { Configuration } from './config/configuration';
 import { Coffre, CoffreFichier } from './noyau/pki/coffre';
@@ -27,6 +28,8 @@ export async function creerApplication(
     } as NestApplicationOptions['httpsOptions'],
   });
   app.setGlobalPrefix('api/v1');
+  // Les photos de justificatifs (2 Mo au plus, réduites par l'écran) passent dans le corps JSON.
+  (app as NestExpressApplication).useBodyParser('json', { limit: '3mb' });
   app.enableShutdownHooks();
   // Pas d'en-tête révélant la technologie utilisée.
   app.getHttpAdapter().getInstance().disable('x-powered-by');

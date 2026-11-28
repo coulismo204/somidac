@@ -5,3 +5,4 @@
 export * from './noyau';
 export * from './catalogue';
 export * from './ventes';
+export * from './tresorerie';

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { MODULES_ACTIFS_PAR_DEFAUT, ROLES_PAR_DEFAUT, TOUTES_PERMISSIONS } from '@somidac/shared';
 import { eq } from 'drizzle-orm';
 import { DB, Db } from './base';
-import { categories, parametres, rolePermissions, roles, sites } from './schema';
+import { categories, categoriesDepenses, comptesTresorerie, parametres, rolePermissions, roles, sites } from './schema';
 
 /**
  * Données indispensables, créées une seule fois : site, paramètres, rôles par défaut.
@@ -57,6 +57,16 @@ export class InitialiserDonnees {
           { nom: 'Cuisine', type: 'bazar' },
           { nom: 'Divers', type: 'bazar' },
         ]);
+      }
+
+      // Trésorerie (§5.6) : la caisse espèces et les catégories de dépenses du cahier des charges.
+      const [unCompte] = await tx.select({ id: comptesTresorerie.id }).from(comptesTresorerie).limit(1);
+      if (!unCompte) await tx.insert(comptesTresorerie).values({ nom: 'Caisse espèces', type: 'caisse' });
+      const [uneCategorieDepense] = await tx.select({ id: categoriesDepenses.id }).from(categoriesDepenses).limit(1);
+      if (!uneCategorieDepense) {
+        await tx
+          .insert(categoriesDepenses)
+          .values(['Transport', 'Loyer', 'Salaires', 'Électricité', 'Téléphone et internet', 'Divers'].map((nom) => ({ nom })));
       }
     });
   }

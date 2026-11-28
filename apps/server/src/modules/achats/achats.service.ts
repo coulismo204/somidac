@@ -3,10 +3,11 @@ import { AchatDto } from '@somidac/shared';
 import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { AuditService } from '../../noyau/audit/audit.service';
 import { DB, Db, Tx } from '../../noyau/base/base';
-import { achatFrais, achatLignes, achats, conditionnements, fournisseurs, produits } from '../../noyau/base/schema';
+import { achatFrais, achatLignes, achats, comptesTresorerie, conditionnements, fournisseurs, produits } from '../../noyau/base/schema';
 import { ErreurMetier } from '../../noyau/commun/erreurs';
 import { SequencesService } from '../../noyau/sequences/sequences.service';
 import { StockService } from '../stock/stock.service';
+import { PaiementsService } from '../tresorerie/paiements.service';
 
 /**
  * Règle R1 : les frais d'approche sont répartis sur les lignes au prorata de leur montant ;
@@ -28,6 +29,7 @@ export class AchatsService {
     private readonly stock: StockService,
     private readonly sequences: SequencesService,
     private readonly audit: AuditService,
+    private readonly paiements: PaiementsService,
   ) {}
 
   async lister(statut?: string) {
@@ -37,6 +39,7 @@ export class AchatsService {
         numero: achats.numero,
         date: achats.date,
         statut: achats.statut,
+        fournisseurId: achats.fournisseurId,
         fournisseur: fournisseurs.nom,
         referenceFournisseur: achats.referenceFournisseur,
         total: achats.total,
@@ -148,10 +151,20 @@ export class AchatsService {
           .set({ quantitePieces: pieces, montant: montants[i], partFrais: parts[i], coutPieceCentimes, lotId })
           .where(eq(achatLignes.id, l.id));
       }
+      // Le montant réglé au grossiste devient un vrai paiement (PAI), qui sort du compte choisi (lot 4).
       await tx
         .update(achats)
-        .set({ numero, statut: 'valide', totalMarchandises, totalFrais, total, validePar: utilisateurId, valideLe: new Date() })
+        .set({ numero, statut: 'valide', totalMarchandises, totalFrais, total, montantPaye: 0, validePar: utilisateurId, valideLe: new Date() })
         .where(eq(achats.id, id));
+      if (a.montantPaye > 0) {
+        const compteId = a.comptePaiementId ?? (await this.caisseParDefaut(tx));
+        await this.paiements.payerFournisseurDans(
+          tx,
+          { fournisseurId: a.fournisseurId, compteId, reference: a.referenceFournisseur, notes: `Réglé à l’achat ${numero}`, affectations: [{ achatId: id, montant: a.montantPaye }] },
+          utilisateurId,
+          appareilId,
+        );
+      }
       await this.audit.enregistrer(tx, {
         action: 'achat.valide',
         utilisateurId,
@@ -165,6 +178,17 @@ export class AchatsService {
   }
 
   // ------------------------------------------------------------------ outils
+
+  private async caisseParDefaut(tx: Tx): Promise<string> {
+    const [c] = await tx
+      .select({ id: comptesTresorerie.id })
+      .from(comptesTresorerie)
+      .where(and(eq(comptesTresorerie.type, 'caisse'), eq(comptesTresorerie.actif, true)))
+      .orderBy(asc(comptesTresorerie.creeLe))
+      .limit(1);
+    if (!c) throw new ErreurMetier('COMPTE_REQUIS', 'Choisissez le compte qui paie le grossiste');
+    return c.id;
+  }
 
   private async brouillon(tx: Tx, id: string) {
     const [a] = await tx.select().from(achats).where(eq(achats.id, id)).for('update');
@@ -189,6 +213,7 @@ export class AchatsService {
         referenceFournisseur: dto.referenceFournisseur ?? null,
         notes: dto.notes ?? null,
         montantPaye: dto.montantPaye,
+        comptePaiementId: dto.comptePaiementId ?? null,
         totalMarchandises,
         totalFrais,
         total: totalMarchandises + totalFrais,
