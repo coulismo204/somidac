@@ -84,7 +84,7 @@ function Reception({ bl, onFermer }: { bl: LivraisonDetail; onFermer: (fait: boo
         </>
       }
     >
-      <p style={{ lineHeight: 1.5 }}>Indiquez ce que le client a réellement accepté. Les articles refusés (casse, date courte…) reviennent en stock ; la facture portera sur les quantités acceptées.</p>
+      <p>Les refus reviennent en stock.</p>
       <table className="tableau">
         <thead>
           <tr>
@@ -273,7 +273,7 @@ export function EditeurLivraison({ id, onFermer, onOuvrirFacture }: { id?: strin
         <div>
           <h1>{detail?.numero ?? (idCourant ? 'Bon de livraison (brouillon)' : 'Nouveau bon de livraison')}</h1>
           <p>
-            {brouillon ? 'Préparez les produits : le stock ne sort qu’à la validation.' : `${detail?.client.raisonSociale}, le ${formaterJour(detail?.date)}`}
+            {brouillon ? 'Brouillon' : `${detail?.client.raisonSociale}, le ${formaterJour(detail?.date)}`}
             {detail && !brouillon && <span style={{ marginLeft: 10 }}><StatutLivraisonPastille statut={detail.statut} /></span>}
           </p>
         </div>
@@ -489,9 +489,8 @@ export function EditeurLivraison({ id, onFermer, onOuvrirFacture }: { id?: strin
             </>
           }
         >
-          <p style={{ lineHeight: 1.5 }}>
-            {formaterNombre([...piecesParProduit.values()].reduce((t, q) => t + q, 0))} pièces vont sortir du stock, en commençant par les lots qui périment le plus tôt (les lots périmés ne sortent jamais).
-            Le bon recevra son numéro définitif et <strong>ne pourra plus être modifié</strong>.
+          <p>
+            {formaterNombre([...piecesParProduit.values()].reduce((t, q) => t + q, 0))} pièces vont sortir du stock. <strong>Le bon ne pourra plus être modifié.</strong>
           </p>
         </Modale>
       )}

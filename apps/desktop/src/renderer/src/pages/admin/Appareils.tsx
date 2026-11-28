@@ -133,7 +133,6 @@ export function Appareils() {
       <div className="entete-page">
         <div>
           <h1>Appareils</h1>
-          <p>Chaque poste possède sa propre clé chiffrée. Un appareil révoqué est bloqué immédiatement.</p>
         </div>
         <button className="bouton" onClick={() => setCreation(true)}>
           <Icone nom="plus" /> Nouvel appareil

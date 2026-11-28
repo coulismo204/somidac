@@ -54,7 +54,6 @@ export function Achats() {
       <div className="entete-page">
         <div>
           <h1>Achats</h1>
-          <p>Achats chez les grossistes : à la validation, le stock augmente et le coût de revient est recalculé.</p>
         </div>
         {onglet === 'achats' && (
           <button className="bouton" onClick={() => setOuvert('nouveau')}>

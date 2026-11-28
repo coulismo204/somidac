@@ -64,7 +64,6 @@ export function Parametres() {
       <div className="entete-page">
         <div>
           <h1>Paramètres</h1>
-          <p>Informations imprimées sur les factures et bons de livraison, fiscalité, modules et sécurité.</p>
         </div>
         <button className="bouton" disabled={envoi}>
           {envoi ? 'Enregistrement…' : 'Enregistrer'}
@@ -113,12 +112,12 @@ export function Parametres() {
                 onChange={(e) => setP({ ...p, delaiAlertePeremptionJours: Number(e.target.value) })}
               />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Champ libelle="Ouverture" aide="Opérations hors de ces heures signalées au gérant" type="time" value={p.heureOuverture} onChange={(e) => setP({ ...p, heureOuverture: e.target.value })} />
+                <Champ libelle="Ouverture" type="time" value={p.heureOuverture} onChange={(e) => setP({ ...p, heureOuverture: e.target.value })} />
                 <Champ libelle="Fermeture" type="time" value={p.heureFermeture} onChange={(e) => setP({ ...p, heureFermeture: e.target.value })} />
               </div>
               <Champ
                 libelle="Seuil d’alerte d’écart (FCFA)"
-                aide="Écart de caisse ou d’inventaire signalé au gérant à partir de ce montant"
+                aide="Caisse et inventaire"
                 type="number"
                 min={0}
                 value={p.seuilAlerteEcart}

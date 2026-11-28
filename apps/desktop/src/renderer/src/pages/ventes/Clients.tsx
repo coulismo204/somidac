@@ -71,9 +71,6 @@ function PrixClient({ client }: { client: Client }) {
   if (!lignes) return <div className="vide">Chargement…</div>;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <p className="secondaire" style={{ color: 'var(--texte-2)' }}>
-        Sans prix particulier, le prix par défaut du produit s’applique.{!modifiable && ' Seul le gérant peut modifier ces prix.'}
-      </p>
       {modifiable && (
         <div>
           <input

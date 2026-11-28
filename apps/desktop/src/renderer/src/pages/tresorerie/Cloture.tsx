@@ -113,7 +113,7 @@ export function Cloture() {
     <>
       <Message type="erreur">{erreur}</Message>
       <Message type="succes">{info}</Message>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16, margin: '16px 0', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 760px)', gap: 16, margin: '16px 0', alignItems: 'start' }}>
         <div className="carte">
           <div className="entete-carte">
             <h3>Clôture du {formaterJour(jour)}</h3>
@@ -133,7 +133,7 @@ export function Cloture() {
             </div>
           ) : (
             <div className="corps" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ color: 'var(--texte-2)' }}>Comptez l’argent de la caisse (facultatif : par billets et pièces), puis enregistrez le total.{!gerant && ' Le montant attendu n’est pas affiché.'}</p>
+              {!gerant && <p className="secondaire" style={{ color: 'var(--texte-3)' }}>Montant attendu non affiché.</p>}
               <div className="billetage">
                 {COUPURES.map(([v, type]) => (
                   <label key={`${v}-${type}`} title={type}>
@@ -165,14 +165,6 @@ export function Cloture() {
               </div>
             </div>
           )}
-        </div>
-        <div className="carte">
-          <div className="corps" style={{ display: 'flex', flexDirection: 'column', gap: 8, color: 'var(--texte-2)', lineHeight: 1.5 }}>
-            <h3>Comment ça marche</h3>
-            <p>1. En fin de journée, le caissier compte l’argent et saisit le total, sans voir le montant attendu.</p>
-            <p>2. Si le total ne correspond pas, il recompte ; si l’écart se confirme, il l’explique.</p>
-            <p>3. Le gérant valide : l’écart est passé en caisse et une sauvegarde est faite.</p>
-          </div>
         </div>
       </div>
 

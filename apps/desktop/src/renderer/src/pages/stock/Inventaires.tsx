@@ -155,7 +155,7 @@ export function Inventaires({ onChangement }: { onChangement: () => void }) {
             onFermer={() => setConfirmer(false)}
             pied={<><button className="bouton secondaire" onClick={() => setConfirmer(false)}>Annuler</button><button className="bouton" onClick={() => void valider()}>Valider et corriger le stock</button></>}
           >
-            <p style={{ lineHeight: 1.5 }}>Chaque écart devient une correction de stock, tracée dans le journal. Les lignes non comptées restent inchangées.</p>
+            <p>Les écarts corrigeront le stock.</p>
           </Modale>
         )}
       </>

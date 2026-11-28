@@ -107,7 +107,6 @@ export function Journal() {
       <div className="entete-page">
         <div>
           <h1>Journal d'audit</h1>
-          <p>Chaque action est enregistrée et liée à la précédente : aucune ligne ne peut être modifiée ou effacée.</p>
         </div>
         <button className="bouton secondaire" onClick={() => void verifier()}>
           <Icone nom="bouclier" /> Vérifier l'intégrité

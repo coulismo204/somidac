@@ -320,13 +320,12 @@ function OngletTresorerie({ g }: { g: Global }) {
   return (
     <>
       <div className="grille-kpi">
-        <Kpi icone="tresorerie" libelle="Caisse espèces" valeur={t.parType.caisse != null ? formaterMontant(t.parType.caisse) : '•••••'} detail={t.parType.caisse == null ? 'visible du gérant (clôture à l’aveugle)' : 'solde actuel'} />
+        <Kpi icone="tresorerie" libelle="Caisse espèces" valeur={t.parType.caisse != null ? formaterMontant(t.parType.caisse) : '•••••'} detail={t.parType.caisse == null ? 'visible du gérant' : 'solde actuel'} />
         <Kpi icone="tresorerie" libelle="Mobile Money" valeur={formaterMontant(t.parType.mobile_money ?? 0)} detail="solde actuel" />
         <Kpi icone="tresorerie" libelle="Banque" valeur={formaterMontant(t.parType.banque ?? 0)} detail="solde actuel" />
         <Kpi icone="ventes" libelle="Encaissé aujourd’hui" valeur={formaterMontant(t.encaissementsJour)} detail={g.ventes?.aEncaisser ? `reste à encaisser : ${formaterMontant(g.ventes.aEncaisser.montant)}` : undefined} />
         <Kpi icone="achats" libelle="Dettes fournisseurs" valeur={formaterMontant(t.dettesFournisseurs)} detail={`dépenses du mois : ${formaterMontant(t.depensesMois)}`} />
       </div>
-      <p className="secondaire" style={{ color: 'var(--texte-3)' }}>Le détail des comptes, encaissements et dépenses est dans <a href="#/tresorerie">Trésorerie</a>.</p>
     </>
   );
 }

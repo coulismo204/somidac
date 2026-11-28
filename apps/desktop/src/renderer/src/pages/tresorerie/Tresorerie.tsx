@@ -47,7 +47,7 @@ function FicheCompte({ compte, onFermer }: { compte?: Compte; onFermer: (fait: b
             </select>
           </div>
           <Champ libelle={f.type === 'banque' ? 'N° de compte' : f.type === 'mobile_money' ? 'Numéro' : 'Référence'} value={f.reference} onChange={(e) => setF({ ...f, reference: e.target.value })} />
-          <Champ libelle="Solde d’ouverture (FCFA)" aide="Modifiable tant que le compte n’a servi à aucune opération." type="number" min={0} value={f.soldeInitial} onChange={(e) => setF({ ...f, soldeInitial: Number(e.target.value) })} />
+          <Champ libelle="Solde d’ouverture (FCFA)" type="number" min={0} value={f.soldeInitial} onChange={(e) => setF({ ...f, soldeInitial: Number(e.target.value) })} />
           {compte && (
             <label className="case">
               <input type="checkbox" checked={f.actif} onChange={(e) => setF({ ...f, actif: e.target.checked })} /> Compte utilisé
@@ -107,14 +107,14 @@ function Comptes() {
             <div className="libelle">{c.nom}</div>
             <div className="valeur">{c.solde == null ? '•••••' : formaterMontant(c.solde)}</div>
             <div className="detail">
-              {c.soldeMasque ? 'Visible du gérant (clôture à l’aveugle)' : [c.type !== 'caisse' || c.nom !== TYPES_COMPTES.caisse ? TYPES_COMPTES[c.type] : null, c.reference].filter(Boolean).join(' · ') || 'Espèces'}
+              {c.soldeMasque ? 'Visible du gérant' : [c.type !== 'caisse' || c.nom !== TYPES_COMPTES.caisse ? TYPES_COMPTES[c.type] : null, c.reference].filter(Boolean).join(' · ') || 'Espèces'}
             </div>
           </button>
         ))}
       </div>
 
       {compte?.soldeMasque && (
-        <Message type="info">Le journal de la caisse est réservé au gérant : le montant attendu reste inconnu jusqu’à la clôture. Choisissez un autre compte pour voir son journal.</Message>
+        <Message type="info">Journal de la caisse réservé au gérant.</Message>
       )}
       {compte && !compte.soldeMasque && (
         <div className="carte">
@@ -211,7 +211,7 @@ function Transferts() {
   return (
     <>
       <div className="barre-outils" style={{ justifyContent: 'space-between' }}>
-        <p style={{ color: 'var(--texte-2)' }}>Par exemple un dépôt d’espèces à la banque, ou un retrait Mobile Money.</p>
+<span />
         <button className="bouton" onClick={() => setNouveau(true)}><Icone nom="plus" /> Nouveau transfert</button>
       </div>
       <Message type="erreur">{!nouveau ? erreur : undefined}</Message>
@@ -283,7 +283,6 @@ export function Tresorerie() {
       <div className="entete-page">
         <div>
           <h1>Trésorerie</h1>
-          <p>Caisse, Mobile Money et banque : chaque franc qui entre ou qui sort, avec son justificatif.</p>
         </div>
       </div>
       <div className="onglets">

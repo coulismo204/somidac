@@ -62,7 +62,7 @@ function Import({ onImporte }: { onImporte: () => void }) {
     setInfo(undefined);
     const r = await window.somidac.documents.enregistrerFichier('SOMIDAC-fichier-de-depart', 'xlsx', creerModele());
     if (!r.ok) setErreur(r.message);
-    else if (r.valeur) setInfo(`Modèle enregistré : ${r.valeur}. Remplissez-le dans Excel, puis choisissez-le ci-dessous.`);
+    else if (r.valeur) setInfo(`Modèle enregistré : ${r.valeur}. `);
   };
 
   const choisir = async (fichier?: File) => {
@@ -103,7 +103,7 @@ function Import({ onImporte }: { onImporte: () => void }) {
       const r = await appeler<ResultatImport>('POST', '/mise-en-service/import', { ...lecture.dto, verifierSeulement: false });
       setResultat(r);
       if (r.enregistre) {
-        setInfo('Import terminé : les données sont enregistrées.');
+        setInfo('Import terminé.');
         onImporte();
       }
     } catch (e) {
@@ -119,22 +119,21 @@ function Import({ onImporte }: { onImporte: () => void }) {
       <div className="entete-carte">
         <div>
           <h3>Fichier Excel de départ</h3>
-          <div className="secondaire" style={{ color: 'var(--texte-3)', fontSize: 12, marginTop: 2 }}>Produits, fournisseurs, clients et stock d’ouverture en une seule fois</div>
         </div>
       </div>
       <div className="corps" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <ol className="etapes-import">
           <li>
-            <strong>Téléchargez le modèle</strong> et remplissez-le dans Excel (des exemples montrent le format attendu).
-            <button className="bouton secondaire petit" style={{ marginLeft: 10 }} onClick={() => void telechargerModele()}>Télécharger le modèle Excel</button>
+            <strong>Remplir le modèle Excel</strong>
+            <button className="bouton secondaire petit" style={{ marginLeft: 10 }} onClick={() => void telechargerModele()}>Télécharger le modèle</button>
           </li>
           <li>
-            <strong>Choisissez le fichier rempli</strong> : tout est vérifié, rien n’est encore enregistré.
+            <strong>Le faire vérifier</strong>
             <button className="bouton secondaire petit" style={{ marginLeft: 10 }} disabled={envoi} onClick={() => champ.current?.click()}>Choisir le fichier…</button>
             <input ref={champ} type="file" accept=".xlsx" hidden onChange={(e) => { void choisir(e.target.files?.[0]); e.target.value = ''; }} />
             {nomFichier && <span className="secondaire" style={{ marginLeft: 10, color: 'var(--texte-2)' }}>{nomFichier}</span>}
           </li>
-          <li><strong>Importez</strong> quand il n’y a plus d’erreur : tout est enregistré d’un coup, ou rien.</li>
+          <li><strong>Importer</strong></li>
         </ol>
         <Message type="erreur">{erreur}</Message>
         <Message type="succes">{info}</Message>
@@ -148,11 +147,11 @@ function Import({ onImporte }: { onImporte: () => void }) {
         )}
         {resultat && !resultat.enregistre && resultat.valide && !lecture?.erreurs.length && (
           <div className="actions" style={{ justifyContent: 'flex-start' }}>
-            <Message type="info">Le fichier est correct{resultat.avertissements.length ? ` (${resultat.avertissements.length} remarque(s) ci-dessous)` : ''}. Rien n’est encore enregistré.</Message>
+            <Message type="info">Fichier correct{resultat.avertissements.length ? ` (${resultat.avertissements.length} remarque(s))` : ''}.</Message>
             <button className="bouton" disabled={envoi} onClick={() => void importer()}>Importer maintenant</button>
           </div>
         )}
-        {resultat && (!resultat.valide || !!lecture?.erreurs.length) && <Message type="erreur">Le fichier contient des erreurs : corrigez-les dans Excel, enregistrez, puis choisissez à nouveau le fichier. Rien n’a été enregistré.</Message>}
+        {resultat && (!resultat.valide || !!lecture?.erreurs.length) && <Message type="erreur">Corrigez ces erreurs dans Excel, puis choisissez à nouveau le fichier.</Message>}
       </div>
       {lecture && <div style={{ padding: '0 20px 20px' }}><ListeErreurs titre="Erreurs de saisie" liste={lecture.erreurs} type="erreur" /></div>}
       {resultat && (
@@ -180,7 +179,6 @@ export function MiseEnService() {
       <div className="entete-page">
         <div>
           <h1>Mise en service</h1>
-          <p>Les étapes pour démarrer avec SOMIDAC. Elles se cochent toutes seules quand c’est fait.</p>
         </div>
         {etat && (
           <div className="avancement">

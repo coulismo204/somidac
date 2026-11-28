@@ -49,7 +49,6 @@ export function Produits() {
       <div className="entete-page">
         <div>
           <h1>Produits</h1>
-          <p>Catalogue, conditionnements, codes-barres et prix de vente.</p>
         </div>
         {peut('produits.gerer') && (
           <button className="bouton" onClick={() => setEdition('nouveau')}>

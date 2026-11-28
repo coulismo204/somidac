@@ -119,7 +119,7 @@ function NouvelAvoir({ f, onFermer }: { f: FactureDetail; onFermer: (avoirId?: s
         </tbody>
       </table>
       <p>
-        Montant estimé (hors remise sur le total{f.tauxTvaPct > 0 ? ' et TVA' : ''}) : <strong>{formaterMontant(montantEstime)}</strong>. L’avoir reçoit un numéro définitif et ne pourra plus être modifié.
+        Environ <strong>{formaterMontant(montantEstime)}</strong>{f.tauxTvaPct > 0 ? ' HT' : ''}. L’avoir ne pourra plus être modifié.
       </p>
       <Message type="erreur">{erreur}</Message>
     </Modale>

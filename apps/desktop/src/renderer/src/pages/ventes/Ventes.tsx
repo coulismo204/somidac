@@ -94,7 +94,6 @@ export function Ventes() {
       <div className="entete-page">
         <div>
           <h1>Ventes</h1>
-          <p>Bon de livraison, réception chez le client, puis facture sur les quantités acceptées.</p>
         </div>
         {onglet === 'livraisons' && (
           <button className="bouton" onClick={() => setOuvert({ type: 'livraison' })}>

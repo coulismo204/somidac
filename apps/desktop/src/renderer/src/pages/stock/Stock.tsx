@@ -199,7 +199,6 @@ export function Stock() {
       <div className="entete-page">
         <div>
           <h1>Stock</h1>
-          <p>Quantités en pièces, par lot. Le lot qui périme en premier sort d'abord. Les entrées et sorties retracent chaque mouvement.</p>
         </div>
       </div>
       <div className="onglets">

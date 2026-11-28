@@ -71,7 +71,7 @@ export function Encaissements() {
   return (
     <>
       <div className="barre-outils" style={{ justifyContent: 'space-between' }}>
-        <p style={{ color: 'var(--texte-2)' }}>Un encaissement règle une ou plusieurs factures, en tout ou en partie. Un reçu s’imprime pour le client.</p>
+<span />
         <button className="bouton" onClick={() => setNouveau(true)}><Icone nom="plus" /> Encaisser</button>
       </div>
       <Message type="erreur">{erreur}</Message>

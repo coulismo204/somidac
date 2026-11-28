@@ -156,7 +156,7 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
       <div className="entete-page">
         <div>
           <h1>{detail?.numero ?? (idCourant ? 'Achat (brouillon)' : 'Nouvel achat')}</h1>
-          <p>{lectureSeule ? `Achat validé - ${detail?.fournisseur}, le ${formaterJour(detail?.date)}` : 'Le stock n’est modifié qu’à la validation.'}</p>
+          <p>{lectureSeule ? `Achat validé - ${detail?.fournisseur}, le ${formaterJour(detail?.date)}` : 'Brouillon'}</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           {lectureSeule && <button className="bouton secondaire" onClick={() => setImprimer(true)}>Imprimer le bon de réception</button>}
@@ -283,7 +283,6 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
                 <Icone nom="plus" taille={14} /> Ajouter des frais
               </button>
             )}
-            <p className="secondaire" style={{ color: 'var(--texte-3)', fontSize: 12 }}>Répartis sur les produits au prorata de leur montant, pour connaître le vrai coût de revient.</p>
           </div>
         </div>
         <div className="carte">
@@ -332,9 +331,8 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
             </>
           }
         >
-          <p style={{ lineHeight: 1.5 }}>
-            Le stock va augmenter de {formaterNombre(lignes.reduce((t, l) => t + l.quantite * (produit(l.produitId)?.conditionnements.find((c) => c.id === l.conditionnementId)?.nbPieces ?? 1), 0))} pièces et
-            l'achat recevra son numéro définitif. <strong>Il ne pourra plus être modifié.</strong>
+          <p>
+            +{formaterNombre(lignes.reduce((t, l) => t + l.quantite * (produit(l.produitId)?.conditionnements.find((c) => c.id === l.conditionnementId)?.nbPieces ?? 1), 0))} pièces en stock. <strong>L’achat ne pourra plus être modifié.</strong>
           </p>
         </Modale>
       )}

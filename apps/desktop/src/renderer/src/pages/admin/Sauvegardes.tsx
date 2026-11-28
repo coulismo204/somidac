@@ -280,7 +280,7 @@ export function Sauvegardes() {
       <div className="entete-page">
         <div>
           <h1>Sauvegardes</h1>
-          <p>Chaque jour à {etat.heure}, chiffrées, copiées vers une clé USB ou un dossier synchronisé.</p>
+          <p>Automatiques chaque jour à {etat.heure}</p>
         </div>
         {etat.configure && (
           <button className="bouton" onClick={() => void sauvegarderMaintenant()} disabled={enCours || !etat.outilDisponible}>

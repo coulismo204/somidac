@@ -117,7 +117,6 @@ export function Utilisateurs() {
       <div className="entete-page">
         <div>
           <h1>Utilisateurs</h1>
-          <p>Un compte personnel par personne. Les comptes ne sont jamais supprimés : on les désactive.</p>
         </div>
         <button className="bouton" onClick={() => (setErreurModale(undefined), setEdition({ roles: [], plafondRemisePct: 0, actif: true }))}>
           <Icone nom="plus" /> Nouvel utilisateur

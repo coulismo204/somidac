@@ -31,11 +31,11 @@ export class MiseEnServiceService {
 
   async etat() {
     const p = await this.parametres.lire();
-    const coordonnees = [p.adresse, p.telephone, p.nif, p.rccm].filter((x) => x && x.trim()).length;
+    const manquantes = ([['adresse', p.adresse], ['téléphone', p.telephone], ['NIF', p.nif], ['RCCM', p.rccm]] as const).filter(([, v]) => !v?.trim()).map(([k]) => k);
+    const coordonnees = 4 - manquantes.length;
     const utilisateurs = await this.nombre(sql`SELECT count(*) AS n FROM utilisateurs WHERE actif`);
     const postes = await this.nombre(sql`SELECT count(*) AS n FROM appareils WHERE statut = 'actif'`);
     const sauvegardesReussies = await this.nombre(sql`SELECT count(*) AS n FROM sauvegardes WHERE statut = 'reussie'`);
-    const comptesAutres = await this.nombre(sql`SELECT count(*) AS n FROM comptes_tresorerie WHERE actif AND type <> 'caisse'`);
     const comptesOuverts = await this.nombre(sql`SELECT count(DISTINCT compte_id) AS n FROM mouvements_tresorerie`);
     const produitsActifs = await this.nombre(sql`SELECT count(*) AS n FROM produits WHERE actif`);
     const sansPrix = await this.nombre(sql`
@@ -49,7 +49,7 @@ export class MiseEnServiceService {
         cle: 'entreprise',
         titre: 'Coordonnées de l’entreprise',
         fait: coordonnees === 4,
-        detail: coordonnees === 4 ? 'Adresse, téléphone, NIF et RCCM renseignés : ils figurent sur les factures.' : `${4 - coordonnees} information(s) manquante(s) parmi adresse, téléphone, NIF, RCCM (imprimées sur les factures).`,
+        detail: coordonnees === 4 ? 'Renseignées.' : `Manque : ${manquantes.join(', ')}.`,
         lien: '#/parametres',
       },
       {
@@ -57,19 +57,19 @@ export class MiseEnServiceService {
         titre: 'Sauvegardes',
         fait: !!p.sauvegardeClePublique && p.sauvegardeDossiers.length > 0 && sauvegardesReussies > 0,
         detail: !p.sauvegardeClePublique
-          ? 'Choisissez le mot de passe de restauration et gardez-le en lieu sûr.'
+          ? 'Choisir le mot de passe de restauration.'
           : !p.sauvegardeDossiers.length
-            ? 'Ajoutez une copie externe (clé USB, disque, dossier synchronisé).'
+            ? 'Ajouter une copie externe (clé USB).'
             : sauvegardesReussies
-              ? `Automatiques chaque jour à ${p.sauvegardeHeure}, avec copie externe.`
-              : 'Faites une première sauvegarde pour vérifier la copie externe.',
+              ? `Chaque jour à ${p.sauvegardeHeure}.`
+              : 'Faire une première sauvegarde.',
         lien: '#/sauvegardes',
       },
       {
         cle: 'utilisateurs',
         titre: 'Comptes des utilisateurs',
         fait: utilisateurs > 1,
-        detail: utilisateurs > 1 ? `${utilisateurs} comptes actifs, chacun avec son rôle.` : 'Créez un compte pour chaque personne (caissier, magasinier, commercial).',
+        detail: utilisateurs > 1 ? `${utilisateurs} comptes actifs.` : 'Créer les comptes du personnel.',
         lien: '#/utilisateurs',
       },
       {
@@ -77,37 +77,35 @@ export class MiseEnServiceService {
         titre: 'Postes secondaires',
         fait: postes > 1,
         facultative: true,
-        detail: postes > 1 ? `${postes} postes enregistrés.` : 'Enregistrez les autres PC avec un code d’activation (si vous en avez).',
+        detail: postes > 1 ? `${postes} postes.` : 'Enregistrer les autres PC.',
         lien: '#/appareils',
       },
       {
         cle: 'tresorerie',
         titre: 'Comptes de trésorerie et soldes d’ouverture',
         fait: comptesOuverts > 0,
-        detail: comptesOuverts > 0
-          ? `${comptesOuverts} compte(s) avec un solde de départ${comptesAutres ? '' : ' ; ajoutez Mobile Money ou banque si besoin'}.`
-          : 'Saisissez l’argent présent dans la caisse, et ajoutez vos comptes Mobile Money et banque.',
+        detail: comptesOuverts > 0 ? `${comptesOuverts} compte(s) ouvert(s).` : 'Saisir l’argent en caisse.',
         lien: '#/tresorerie',
       },
       {
         cle: 'catalogue',
         titre: 'Catalogue des produits',
         fait: produitsActifs > 0 && sansPrix === 0,
-        detail: !produitsActifs ? 'Importez le fichier Excel de départ ou créez les produits.' : sansPrix ? `${sansPrix} produit(s) sans prix de vente.` : `${produitsActifs} produits, tous avec un prix de vente.`,
+        detail: !produitsActifs ? 'Importer ou créer les produits.' : sansPrix ? `${sansPrix} produit(s) sans prix.` : `${produitsActifs} produits.`,
         lien: '#/produits',
       },
       {
         cle: 'tiers',
         titre: 'Fournisseurs et clients',
         fait: fournisseursN > 0 && clientsN > 0,
-        detail: `${fournisseursN} fournisseur(s), ${clientsN} client(s)${clientsN ? '' : ' : créez au moins Bon Prix'}.`,
+        detail: `${fournisseursN} fournisseur(s), ${clientsN} client(s).`,
         lien: '#/ventes',
       },
       {
         cle: 'stock',
         titre: 'Stock de départ',
         fait: stockN > 0,
-        detail: stockN > 0 ? 'Le stock de départ est saisi.' : 'Importez le stock d’ouverture (feuille « Stock d’ouverture ») ou faites un inventaire.',
+        detail: stockN > 0 ? 'Saisi.' : 'Importer ou faire un inventaire.',
         lien: '#/mise-en-service',
       },
     ];

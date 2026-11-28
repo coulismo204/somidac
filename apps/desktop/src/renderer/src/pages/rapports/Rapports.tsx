@@ -293,7 +293,6 @@ function Tresorerie() {
       <div className="barre-outils"><ChoixPeriode du={du} au={au} onChange={(x, y) => (setDu(x), setAu(y))} /></div>
       <Message type="erreur">{erreur}</Message>
       <CarteRapport r={rapport} />
-      <p style={{ color: 'var(--texte-3)', fontSize: 12, marginTop: 10 }}>Le détail de chaque opération (journal de caisse et des comptes) est dans Trésorerie → Comptes.</p>
     </>
   );
 }
@@ -450,7 +449,6 @@ export function Rapports() {
       <div className="entete-page">
         <div>
           <h1>Rapports</h1>
-          <p>Chaque rapport s’exporte en Excel et en PDF.</p>
         </div>
       </div>
       <div className="onglets">
