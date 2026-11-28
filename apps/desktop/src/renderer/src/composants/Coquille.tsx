@@ -79,6 +79,7 @@ export function Coquille({ children }: { children: ReactNode }) {
   }, [appeler]);
   const modulesVisibles = MODULES_METIER.filter((m) => (!modulesActifs || modulesActifs.includes(m.module)) && (!m.permission || (Array.isArray(m.permission) ? m.permission : [m.permission]).some((x) => peut(x))));
   const admin = [
+    { chemin: '/mise-en-service', libelle: 'Mise en service', icone: 'mise-en-service', permission: PERMISSIONS.ADMIN_PARAMETRES },
     { chemin: '/utilisateurs', libelle: 'Utilisateurs', icone: 'utilisateurs', permission: PERMISSIONS.ADMIN_UTILISATEURS },
     { chemin: '/appareils', libelle: 'Appareils', icone: 'appareils', permission: PERMISSIONS.ADMIN_APPAREILS },
     { chemin: '/parametres', libelle: 'Paramètres', icone: 'parametres', permission: PERMISSIONS.ADMIN_PARAMETRES },

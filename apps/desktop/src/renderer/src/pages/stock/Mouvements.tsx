@@ -31,6 +31,7 @@ interface Journal {
 const TYPES: Record<Sens, [string, string][]> = {
   entree: [
     ['achat', 'Achats'],
+    ['ouverture', 'Stock d’ouverture'],
     ['retour_client', 'Retours clients'],
     ['ajustement', 'Ajustements'],
     ['inventaire', 'Inventaires'],
@@ -53,6 +54,7 @@ const LIBELLE_TYPE: Record<string, string> = {
   casse: 'Casse',
   peremption: 'Péremption',
   inventaire: 'Inventaire',
+  ouverture: 'Stock d’ouverture',
 };
 
 function decaler(jours: number): string {

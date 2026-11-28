@@ -19,6 +19,7 @@ import { TableauDeBord } from './pages/TableauDeBord';
 import { Ventes } from './pages/ventes/Ventes';
 import { Tresorerie } from './pages/tresorerie/Tresorerie';
 import { Rapports } from './pages/rapports/Rapports';
+import { MiseEnService } from './pages/mise-en-service/MiseEnService';
 import { Verrouillage } from './pages/Verrouillage';
 
 /** Il suffit d'une des permissions données. */
@@ -72,6 +73,7 @@ export function App() {
           <Route path="/rapports" element={<Autorise permission={[PERMISSIONS.RAPPORTS_TOUS, PERMISSIONS.RAPPORTS_STOCK, PERMISSIONS.RAPPORTS_SES_VENTES, PERMISSIONS.AUDIT_VOIR]}><Rapports /></Autorise>} />
           <Route path="/utilisateurs" element={<Autorise permission={PERMISSIONS.ADMIN_UTILISATEURS}><Utilisateurs /></Autorise>} />
           <Route path="/appareils" element={<Autorise permission={PERMISSIONS.ADMIN_APPAREILS}><Appareils /></Autorise>} />
+          <Route path="/mise-en-service" element={<Autorise permission={PERMISSIONS.ADMIN_PARAMETRES}><MiseEnService /></Autorise>} />
           <Route path="/parametres" element={<Autorise permission={PERMISSIONS.ADMIN_PARAMETRES}><Parametres /></Autorise>} />
           <Route path="/sauvegardes" element={<Autorise permission={PERMISSIONS.ADMIN_SAUVEGARDES}><Sauvegardes /></Autorise>} />
           <Route path="/journal" element={<Autorise permission={PERMISSIONS.AUDIT_VOIR}><Journal /></Autorise>} />

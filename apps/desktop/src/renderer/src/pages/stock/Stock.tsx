@@ -50,6 +50,7 @@ const TYPES: Record<string, string> = {
   casse: 'Casse',
   peremption: 'Péremption',
   inventaire: 'Inventaire',
+  ouverture: 'Stock d’ouverture',
 };
 
 function Ajustement({ produit, onFermer }: { produit: ProduitEtat; onFermer: (fait: boolean) => void }) {

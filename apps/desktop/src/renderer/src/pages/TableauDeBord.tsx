@@ -59,10 +59,14 @@ export function TableauDeBord() {
   const [t, setT] = useState<Tableau>();
   const [raisonSociale, setRaisonSociale] = useState('SOMIDAC SARL');
   const [alertesSauvegarde, setAlertesSauvegarde] = useState<string[]>([]);
+  const [miseEnService, setMiseEnService] = useState<{ faites: number; total: number; termine: boolean }>();
 
   useEffect(() => {
     appeler<Tableau>('GET', '/tableau-de-bord').then(setT).catch(() => undefined);
     appeler<{ raisonSociale: string }>('GET', '/parametres').then((p) => setRaisonSociale(p.raisonSociale)).catch(() => undefined);
+    if (peut('admin.parametres')) {
+      appeler<{ faites: number; total: number; termine: boolean }>('GET', '/mise-en-service').then(setMiseEnService).catch(() => undefined);
+    }
     if (peut('admin.sauvegardes')) {
       appeler<{ alertes: string[] }>('GET', '/sauvegardes').then((e) => setAlertesSauvegarde(e.alertes)).catch(() => undefined);
     }
@@ -76,6 +80,9 @@ export function TableauDeBord() {
   const maxTop = Math.max(1, ...(v?.top ?? []).map((x) => x.ca));
 
   const alertes: { type: 'attention' | 'erreur'; texte: ReactNode }[] = [];
+  if (miseEnService && !miseEnService.termine) {
+    alertes.push({ type: 'attention', texte: <>Mise en service : {miseEnService.faites} étape(s) sur {miseEnService.total} terminée(s). <a href="#/mise-en-service">Continuer</a></> });
+  }
   for (const x of alertesSauvegarde) alertes.push({ type: 'attention', texte: <>{x} <a href="#/sauvegardes">Ouvrir les sauvegardes</a></> });
   if (tr && tr.cloturesAValider > 0 && peut('caisse.valider')) alertes.push({ type: 'attention', texte: <>{tr.cloturesAValider} clôture(s) de caisse à valider. <a href="#/tresorerie">Ouvrir la trésorerie</a></> });
   for (const e of a?.ecartsCaisse ?? []) alertes.push({ type: 'erreur', texte: `Écart de caisse de ${formaterMontant(e.ecart)} le ${formaterJour(e.jour)} (${e.compte}).` });
