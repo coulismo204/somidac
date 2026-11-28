@@ -43,6 +43,13 @@
       "when": 1795796964118,
       "tag": "0005_tresorerie",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795859352200,
+      "tag": "0006_alertes",
+      "breakpoints": true
     }
   ]
 }

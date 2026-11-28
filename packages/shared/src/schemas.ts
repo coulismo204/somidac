@@ -143,6 +143,9 @@ export const parametresEntrepriseSchema = z.object({
   tvaActive: z.boolean(),
   tauxTvaPct: z.number().min(0).max(100),
   delaiAlertePeremptionJours: z.number().int().min(1).max(730),
+  heureOuverture: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Heure au format HH:MM').optional(),
+  heureFermeture: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Heure au format HH:MM').optional(),
+  seuilAlerteEcart: z.number().int().min(0).max(100_000_000).optional(),
   nbMaxAppareils: z.number().int().min(1).max(100),
   modulesActifs: z.array(z.string()),
 });

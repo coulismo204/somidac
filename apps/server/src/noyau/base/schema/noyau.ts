@@ -39,6 +39,11 @@ export const parametres = pgTable('parametres', {
   /** Taux en points de base : 1800 = 18,00 %. */
   tauxTvaBp: integer('taux_tva_bp').notNull().default(0),
   delaiAlertePeremptionJours: integer('delai_alerte_peremption_jours').notNull().default(90),
+  /** Heures d'ouverture (§10.3) : une opération en dehors est signalée au gérant. */
+  heureOuverture: text('heure_ouverture').notNull().default('07:00'),
+  heureFermeture: text('heure_fermeture').notNull().default('20:00'),
+  /** Écart de caisse ou d'inventaire (FCFA) au-delà duquel le gérant est alerté (§10.3). */
+  seuilAlerteEcart: integer('seuil_alerte_ecart').notNull().default(5000),
   nbMaxAppareils: integer('nb_max_appareils').notNull().default(5),
   modulesActifs: text('modules_actifs').array().notNull(),
   /** Sauvegarde automatique quotidienne (§9) : heure « HH:MM » et dossiers de copie externes. */
