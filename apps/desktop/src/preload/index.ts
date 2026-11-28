@@ -23,6 +23,7 @@ const api: ApiSomidac = {
   documents: {
     imprimer: () => ipcRenderer.invoke(CANAUX.IMPRIMER),
     enregistrerPdf: (nomFichier) => ipcRenderer.invoke(CANAUX.PDF, nomFichier),
+    enregistrerFichier: (nomFichier, extension, contenu) => ipcRenderer.invoke(CANAUX.FICHIER, nomFichier, extension, contenu),
   },
 };
 

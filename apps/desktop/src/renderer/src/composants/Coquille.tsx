@@ -8,13 +8,13 @@ import { messageErreur } from '../contexte';
 import { Champ, Icone, Message, Modale } from './communs';
 
 /** Modules métier : ils apparaissent au fil des lots (cahier des charges §11). */
-const MODULES_METIER: { chemin: string; libelle: string; icone: string; module: string; lot?: number; permission?: string }[] = [
+const MODULES_METIER: { chemin: string; libelle: string; icone: string; module: string; lot?: number; permission?: string | string[] }[] = [
   { chemin: '/produits', libelle: 'Produits', icone: 'produits', module: 'produits' },
   { chemin: '/stock', libelle: 'Stock', icone: 'stock', module: 'stock' },
   { chemin: '/achats', libelle: 'Achats', icone: 'achats', module: 'achats', permission: 'achats.saisir' },
   { chemin: '/ventes', libelle: 'Ventes', icone: 'ventes', module: 'ventes', permission: 'ventes.saisir' },
   { chemin: '/tresorerie', libelle: 'Trésorerie', icone: 'tresorerie', module: 'tresorerie', permission: 'tresorerie.encaisser' },
-  { chemin: '/rapports', libelle: 'Rapports', icone: 'rapports', module: 'rapports', lot: 5 },
+  { chemin: '/rapports', libelle: 'Rapports', icone: 'rapports', module: 'rapports', permission: ['rapports.tous', 'rapports.stock', 'rapports.ses_ventes', 'audit.voir'] },
 ];
 
 function libelleRole(permissions: string[]): string {
@@ -77,7 +77,7 @@ export function Coquille({ children }: { children: ReactNode }) {
   useEffect(() => {
     appeler<{ modulesActifs: string[] }>('GET', '/parametres').then((p) => setModulesActifs(p.modulesActifs)).catch(() => undefined);
   }, [appeler]);
-  const modulesVisibles = MODULES_METIER.filter((m) => (!modulesActifs || modulesActifs.includes(m.module)) && (!m.permission || peut(m.permission)));
+  const modulesVisibles = MODULES_METIER.filter((m) => (!modulesActifs || modulesActifs.includes(m.module)) && (!m.permission || (Array.isArray(m.permission) ? m.permission : [m.permission]).some((x) => peut(x))));
   const admin = [
     { chemin: '/utilisateurs', libelle: 'Utilisateurs', icone: 'utilisateurs', permission: PERMISSIONS.ADMIN_UTILISATEURS },
     { chemin: '/appareils', libelle: 'Appareils', icone: 'appareils', permission: PERMISSIONS.ADMIN_APPAREILS },

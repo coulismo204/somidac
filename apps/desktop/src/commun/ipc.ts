@@ -86,6 +86,8 @@ export interface ApiSomidac {
     imprimer(): Promise<Resultat<void>>;
     /** Enregistre en PDF A4 ; renvoie le chemin du fichier, ou null si l'utilisateur annule. */
     enregistrerPdf(nomFichier: string): Promise<Resultat<string | null>>;
+    /** Enregistre un fichier produit par l'écran (export Excel) ; null si l'utilisateur annule. */
+    enregistrerFichier(nomFichier: string, extension: 'xlsx', contenu: Uint8Array): Promise<Resultat<string | null>>;
   };
 }
 
@@ -104,4 +106,5 @@ export const CANAUX = {
   APPELER: 'api:appeler',
   IMPRIMER: 'documents:imprimer',
   PDF: 'documents:pdf',
+  FICHIER: 'documents:fichier',
 } as const;

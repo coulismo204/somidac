@@ -128,15 +128,25 @@ function imprimer(ecran: WebContents): Promise<void> {
 
 /** PDF A4 du document affiché, enregistré là où l'utilisateur le choisit (Documents\SOMIDAC par défaut). */
 async function enregistrerPdf(ecran: WebContents, nomFichier: string): Promise<string | null> {
-  const nom = String(nomFichier ?? '').replace(/[^\w.-]+/g, '_').slice(0, 80) || 'document';
   const donnees = await ecran.printToPDF({ pageSize: 'A4', printBackground: true, preferCSSPageSize: true });
+  return enregistrerSous(ecran, nomFichier, 'pdf', donnees);
+}
+
+const TYPES_FICHIERS = { pdf: 'Document PDF', xlsx: 'Classeur Excel' } as const;
+
+/** Demande où enregistrer (Documents\SOMIDAC par défaut), écrit le fichier et ouvre son dossier. */
+async function enregistrerSous(ecran: WebContents, nomFichier: string, extension: keyof typeof TYPES_FICHIERS, donnees: Uint8Array): Promise<string | null> {
+  if (!(extension in TYPES_FICHIERS) || !(donnees instanceof Uint8Array) || donnees.length > 50 * 1024 * 1024) {
+    throw new ErreurPoste('FICHIER_INVALIDE', 'Fichier invalide');
+  }
+  const nom = String(nomFichier ?? '').replace(/[^\w.-]+/g, '_').slice(0, 80) || 'document';
   const dossier = path.join(app.getPath('documents'), 'SOMIDAC');
   fs.mkdirSync(dossier, { recursive: true });
   const parent = BrowserWindow.fromWebContents(ecran);
-  const options = { title: 'Enregistrer le document en PDF', defaultPath: path.join(dossier, `${nom}.pdf`), filters: [{ name: 'Document PDF', extensions: ['pdf'] }] };
+  const options = { title: `Enregistrer (${TYPES_FICHIERS[extension]})`, defaultPath: path.join(dossier, `${nom}.${extension}`), filters: [{ name: TYPES_FICHIERS[extension], extensions: [extension] }] };
   const choix = parent ? await dialog.showSaveDialog(parent, options) : await dialog.showSaveDialog(options);
   if (choix.canceled || !choix.filePath) return null;
-  const fichier = choix.filePath.toLowerCase().endsWith('.pdf') ? choix.filePath : `${choix.filePath}.pdf`;
+  const fichier = choix.filePath.toLowerCase().endsWith(`.${extension}`) ? choix.filePath : `${choix.filePath}.${extension}`;
   try {
     fs.writeFileSync(fichier, donnees);
   } catch (e) {
@@ -165,6 +175,7 @@ function enregistrerCanaux() {
   gerer(CANAUX.DECONNECTER, () => poste.deconnecter());
   gererPourEcran(CANAUX.IMPRIMER, (ecran) => imprimer(ecran));
   gererPourEcran(CANAUX.PDF, (ecran, nomFichier: string) => enregistrerPdf(ecran, nomFichier));
+  gererPourEcran(CANAUX.FICHIER, (ecran, nomFichier: string, extension: 'xlsx', contenu: Uint8Array) => enregistrerSous(ecran, nomFichier, extension, contenu));
   gerer(CANAUX.APPELER, (methode: string, chemin: string, corps?: unknown) => {
     if (!/^(GET|POST|PUT|PATCH|DELETE)$/.test(methode) || !chemin.startsWith('/')) {
       throw new ErreurPoste('APPEL_INVALIDE', 'Appel invalide');

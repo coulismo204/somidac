@@ -1,131 +1,187 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Message } from '../composants/communs';
 import { useSession } from '../contexte';
-import { formaterDate, formaterMontant } from '../format';
+import { formaterDate, formaterJour, formaterMontant, formaterNombre } from '../format';
 
-interface Parametres {
-  raisonSociale: string;
-  devise: string;
-  modulesActifs: string[];
-  tvaActive: boolean;
+interface Tableau {
+  jour: string;
+  ventes?: {
+    sesVentesSeulement: boolean;
+    caJour: number;
+    caMois: number;
+    margeMois: number | null;
+    tauxMargeMois: number | null;
+    livraisonsJour: number;
+    livraisonsMois: number;
+    top: { libelle: string; code: string | null; pieces: number; ca: number }[];
+    facturesEnRetard?: { nombre: number; montant: number };
+    aEncaisser?: { nombre: number; montant: number };
+    bonsAFacturer?: number;
+  };
+  stock?: {
+    delaiPeremptionJours: number;
+    stockBas: { id: string; designation: string; code: string; stock: number; seuil: number }[];
+    nbStockBas: number;
+    lots: { produit: string; numero: string; peremption: string; quantite: number; perime: boolean }[];
+    nbLotsAEcouler: number;
+    nbLotsPerimes: number;
+    valeur?: number;
+  };
+  tresorerie?: {
+    parType: Record<'caisse' | 'mobile_money' | 'banque', number | null>;
+    dettesFournisseurs: number;
+    depensesMois: number;
+    cloturesAValider: number;
+  };
+  alertes?: {
+    seuil: number;
+    ecartsCaisse: { jour: string; compte: string; ecart: number }[];
+    ecartsInventaire: { id: string; libelle: string; valeur: number }[];
+    horsHeures: number;
+    sensiblesAujourdhui: number;
+  };
 }
 
+function Indicateur({ libelle, valeur, detail, lien, couleur }: { libelle: string; valeur: ReactNode; detail?: ReactNode; lien?: string; couleur?: string }) {
+  const contenu = (
+    <>
+      <div className="libelle">{libelle}</div>
+      <div className="valeur" style={{ color: couleur }}>{valeur}</div>
+      {detail && <div className="detail">{detail}</div>}
+    </>
+  );
+  return lien ? <a className="carte indicateur cliquable" href={lien}>{contenu}</a> : <div className="carte indicateur">{contenu}</div>;
+}
+
+/** Tableau de bord (§5.1) : chiffres du jour et du mois, soldes, produits les plus vendus, alertes. */
 export function TableauDeBord() {
   const { profil, poste, appeler, peut } = useSession();
-  const [p, setP] = useState<Parametres>();
+  const [t, setT] = useState<Tableau>();
+  const [raisonSociale, setRaisonSociale] = useState('SOMIDAC SARL');
   const [alertesSauvegarde, setAlertesSauvegarde] = useState<string[]>([]);
-  const [stock, setStock] = useState<{ stockBas: number; lotsBientotPerimes: number; lotsPerimes: number; valeurTotale?: number }>();
-  const [ventes, setVentes] = useState<{ caJour: number; caMois: number; livraisonsJour: number; livraisonsMois: number; bonsAFacturer: number; facturesNonSoldees: number; resteDuClients: number }>();
-  const [ventesErreur, setVentesErreur] = useState<string>();
-  const [tresorerie, setTresorerie] = useState<{ parType: Record<string, number | null>; total: number | null; encaissementsJour: number; depensesMois: number; dettesFournisseurs: number; cloturesAValider: number; derniereCloture: { jour: string; ecart: number | null } | null }>();
 
   useEffect(() => {
-    appeler<Parametres>('GET', '/parametres').then(setP).catch(() => undefined);
-    appeler<{ resume: { stockBas: number; lotsBientotPerimes: number; lotsPerimes: number; valeurTotale?: number } }>('GET', '/stock')
-      .then((e) => setStock(e.resume))
-      .catch(() => undefined);
-    if (peut('tableau_de_bord.complet')) {
-      appeler<NonNullable<typeof ventes>>('GET', '/ventes/resume')
-        .then(setVentes)
-        .catch((e) => setVentesErreur(e?.code === 'MODULE_DESACTIVE' ? 'Module Ventes désactivé' : 'Indisponible'));
-    }
-    if (peut('tableau_de_bord.complet')) {
-      appeler<NonNullable<typeof tresorerie>>('GET', '/tresorerie/resume').then(setTresorerie).catch(() => undefined);
-    }
+    appeler<Tableau>('GET', '/tableau-de-bord').then(setT).catch(() => undefined);
+    appeler<{ raisonSociale: string }>('GET', '/parametres').then((p) => setRaisonSociale(p.raisonSociale)).catch(() => undefined);
     if (peut('admin.sauvegardes')) {
       appeler<{ alertes: string[] }>('GET', '/sauvegardes').then((e) => setAlertesSauvegarde(e.alertes)).catch(() => undefined);
     }
   }, [appeler, peut]);
 
-  const heure = new Date().getHours();
-  const salut = heure < 18 ? 'Bonjour' : 'Bonsoir';
+  const salut = new Date().getHours() < 18 ? 'Bonjour' : 'Bonsoir';
+  const v = t?.ventes;
+  const s = t?.stock;
+  const tr = t?.tresorerie;
+  const a = t?.alertes;
+  const maxTop = Math.max(1, ...(v?.top ?? []).map((x) => x.ca));
+
+  const alertes: { type: 'attention' | 'erreur'; texte: ReactNode }[] = [];
+  for (const x of alertesSauvegarde) alertes.push({ type: 'attention', texte: <>{x} <a href="#/sauvegardes">Ouvrir les sauvegardes</a></> });
+  if (tr && tr.cloturesAValider > 0 && peut('caisse.valider')) alertes.push({ type: 'attention', texte: <>{tr.cloturesAValider} clôture(s) de caisse à valider. <a href="#/tresorerie">Ouvrir la trésorerie</a></> });
+  for (const e of a?.ecartsCaisse ?? []) alertes.push({ type: 'erreur', texte: `Écart de caisse de ${formaterMontant(e.ecart)} le ${formaterJour(e.jour)} (${e.compte}).` });
+  for (const e of a?.ecartsInventaire ?? []) alertes.push({ type: 'erreur', texte: `Écart d’inventaire de ${formaterMontant(e.valeur)} (« ${e.libelle} »).` });
+  if (a?.horsHeures) alertes.push({ type: 'attention', texte: <>{a.horsHeures} opération(s) hors des heures d’ouverture ces 7 derniers jours. <a href="#/rapports">Voir les actions sensibles</a></> });
+  if (v?.facturesEnRetard?.nombre) alertes.push({ type: 'attention', texte: <>{v.facturesEnRetard.nombre} facture(s) en retard de paiement : {formaterMontant(v.facturesEnRetard.montant)}. <a href="#/ventes">Voir les factures</a></> });
 
   return (
     <>
       <div className="entete-page">
         <div>
-          <h1>
-            {salut}, {profil?.nomComplet.split(' ')[0]}
-          </h1>
-          <p>{p?.raisonSociale ?? 'SOMIDAC SARL'} · {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(new Date())}</p>
+          <h1>{salut}, {profil?.nomComplet.split(' ')[0]}</h1>
+          <p>{raisonSociale} · {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(new Date())}</p>
         </div>
+        {a && <a className="bouton secondaire" href="#/rapports">Actions sensibles du jour : {a.sensiblesAujourdhui}</a>}
       </div>
-      {tresorerie && tresorerie.cloturesAValider > 0 && peut('caisse.valider') && (
-        <div style={{ marginBottom: 12 }}>
-          <Message type="attention">
-            {tresorerie.cloturesAValider} clôture(s) de caisse à valider. <a href="#/tresorerie">Ouvrir la trésorerie</a>
-          </Message>
-        </div>
-      )}
-      {tresorerie?.derniereCloture?.ecart ? (
-        <div style={{ marginBottom: 12 }}>
-          <Message type="attention">Écart de {formaterMontant(tresorerie.derniereCloture.ecart)} à la dernière clôture de caisse ({formaterDate(tresorerie.derniereCloture.jour)}).</Message>
-        </div>
-      ) : null}
-      {alertesSauvegarde.map((a) => (
-        <div key={a} style={{ marginBottom: 12 }}>
-          <Message type="attention">
-            {a} <a href="#/sauvegardes">Ouvrir les sauvegardes</a>
-          </Message>
+
+      {alertes.map((x, i) => (
+        <div key={i} style={{ marginBottom: 10 }}>
+          <Message type={x.type}>{x.texte}</Message>
         </div>
       ))}
-      <div className="grille-cartes" style={{ marginBottom: 20 }}>
-        <a className="carte indicateur cliquable" href="#/ventes">
-          <div className="libelle">Ventes du jour (HT)</div>
-          <div className="valeur">{ventes ? formaterMontant(ventes.caJour) : '-'}</div>
-          <div className="detail">
-            {ventes
-              ? `${ventes.livraisonsJour} livraison(s) · mois : ${formaterMontant(ventes.caMois)}`
-              : ventesErreur ?? (peut('tableau_de_bord.complet') ? 'Chargement…' : 'Chiffres réservés au gérant et au caissier')}
-          </div>
-        </a>
-        {ventes && (
-          <a className="carte indicateur cliquable" href="#/ventes">
-            <div className="libelle">À encaisser</div>
-            <div className="valeur" style={{ color: ventes.resteDuClients ? 'var(--alerte)' : undefined }}>{formaterMontant(ventes.resteDuClients)}</div>
-            <div className="detail">
-              {ventes.facturesNonSoldees} facture(s) non soldée(s){ventes.bonsAFacturer ? ` · ${ventes.bonsAFacturer} bon(s) à facturer` : ''}
-            </div>
-          </a>
-        )}
-        <a className="carte indicateur" href="#/stock" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <div className="libelle">Stock bas</div>
-          <div className="valeur" style={{ color: stock?.stockBas ? 'var(--alerte)' : undefined }}>{stock ? stock.stockBas : '-'}</div>
-          <div className="detail">
-            {stock ? `${stock.lotsBientotPerimes} lot(s) à écouler, ${stock.lotsPerimes} périmé(s)` : 'Module Stock désactivé'}
-            {stock?.valeurTotale !== undefined ? ` · valeur ${formaterMontant(stock.valeurTotale)}` : ''}
-          </div>
-        </a>
-        <a className="carte indicateur cliquable" href="#/tresorerie">
-          <div className="libelle">{tresorerie && tresorerie.total == null ? 'Trésorerie hors caisse' : 'Trésorerie'}</div>
-          <div className="valeur">{tresorerie ? (tresorerie.total != null ? formaterMontant(tresorerie.total) : formaterMontant((tresorerie.parType.mobile_money ?? 0) + (tresorerie.parType.banque ?? 0))) : '-'}</div>
-          <div className="detail">
-            {tresorerie
-              ? [
-                  tresorerie.parType.caisse != null ? `Caisse ${formaterMontant(tresorerie.parType.caisse)}` : 'Caisse : visible du gérant',
-                  `Mobile Money ${formaterMontant(tresorerie.parType.mobile_money ?? 0)}`,
-                  `Banque ${formaterMontant(tresorerie.parType.banque ?? 0)}`,
-                ].join(' · ')
-              : 'Chiffres réservés au gérant et au caissier'}
-          </div>
-        </a>
-        {tresorerie && (
-          <a className="carte indicateur cliquable" href="#/tresorerie">
-            <div className="libelle">Dettes fournisseurs</div>
-            <div className="valeur" style={{ color: tresorerie.dettesFournisseurs ? 'var(--alerte)' : undefined }}>{formaterMontant(tresorerie.dettesFournisseurs)}</div>
-            <div className="detail">Dépenses du mois : {formaterMontant(tresorerie.depensesMois)}</div>
-          </a>
-        )}
-        <div className="carte indicateur">
-          <div className="libelle">Cet appareil</div>
-          <div className="valeur" style={{ fontSize: 17 }}>{poste?.nomAppareil}</div>
-          <div className="detail">Clé valable jusqu'au {formaterDate(poste?.certificatExpireLe)}</div>
+
+      {v && (
+        <div className="grille-cartes" style={{ marginBottom: 16 }}>
+          <Indicateur libelle={v.sesVentesSeulement ? 'Mes ventes du jour (HT)' : 'Ventes du jour (HT)'} valeur={formaterMontant(v.caJour)} detail={`${v.livraisonsJour} livraison(s)`} lien="#/ventes" />
+          <Indicateur libelle={v.sesVentesSeulement ? 'Mes ventes du mois (HT)' : 'Ventes du mois (HT)'} valeur={formaterMontant(v.caMois)} detail={`${v.livraisonsMois} livraison(s)`} lien="#/rapports" />
+          {v.margeMois != null && <Indicateur libelle="Marge brute du mois" valeur={formaterMontant(v.margeMois)} detail={v.tauxMargeMois != null ? `${v.tauxMargeMois.toLocaleString('fr-FR')} % des ventes` : undefined} lien="#/rapports" />}
+          {v.aEncaisser && (
+            <Indicateur
+              libelle="À encaisser"
+              valeur={formaterMontant(v.aEncaisser.montant)}
+              couleur={v.aEncaisser.montant ? 'var(--alerte)' : undefined}
+              detail={`${v.aEncaisser.nombre} facture(s)${v.bonsAFacturer ? ` · ${v.bonsAFacturer} bon(s) à facturer` : ''}`}
+              lien="#/ventes"
+            />
+          )}
         </div>
+      )}
+
+      {tr && (
+        <div className="grille-cartes" style={{ marginBottom: 16 }}>
+          <Indicateur libelle="Caisse espèces" valeur={tr.parType.caisse != null ? formaterMontant(tr.parType.caisse) : '•••••'} detail={tr.parType.caisse == null ? 'Visible du gérant (clôture à l’aveugle)' : undefined} lien="#/tresorerie" />
+          <Indicateur libelle="Mobile Money" valeur={formaterMontant(tr.parType.mobile_money ?? 0)} lien="#/tresorerie" />
+          <Indicateur libelle="Banque" valeur={formaterMontant(tr.parType.banque ?? 0)} lien="#/tresorerie" />
+          <Indicateur libelle="Dettes fournisseurs" valeur={formaterMontant(tr.dettesFournisseurs)} couleur={tr.dettesFournisseurs ? 'var(--alerte)' : undefined} detail={`Dépenses du mois : ${formaterMontant(tr.depensesMois)}`} lien="#/tresorerie" />
+        </div>
+      )}
+
+      <div className="grille-tableau-de-bord">
+        {v && (
+          <div className="carte">
+            <div className="entete-carte"><h3>{v.sesVentesSeulement ? 'Mes 5 produits les plus vendus du mois' : 'Les 5 produits les plus vendus du mois'}</h3></div>
+            {v.top.length === 0 ? (
+              <div className="vide">Aucune vente ce mois-ci.</div>
+            ) : (
+              <div className="corps" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {v.top.map((p, i) => (
+                  <div key={p.libelle} className="top-produit">
+                    <div className="top-ligne">
+                      <span><strong>{i + 1}. {p.libelle}</strong> <span className="secondaire">{formaterNombre(p.pieces)} pièces</span></span>
+                      <span className="nombre">{formaterMontant(p.ca)}</span>
+                    </div>
+                    <div className="barre-progression"><div style={{ width: `${Math.max(4, (p.ca / maxTop) * 100)}%` }} /></div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {s && (
+          <div className="carte">
+            <div className="entete-carte">
+              <h3>Alertes de stock</h3>
+              {s.valeur !== undefined && <span className="secondaire" style={{ color: 'var(--texte-2)' }}>Valeur du stock : {formaterMontant(s.valeur)}</span>}
+            </div>
+            {s.nbStockBas === 0 && s.lots.length === 0 ? (
+              <div className="vide">Aucune alerte de stock.</div>
+            ) : (
+              <table className="tableau">
+                <tbody>
+                  {s.stockBas.map((p) => (
+                    <tr key={p.id}>
+                      <td><strong>{p.designation}</strong><div className="secondaire">{p.code} · sous le seuil de {p.seuil}</div></td>
+                      <td className="nombre"><span className="pastille orange">{formaterNombre(p.stock)} pc</span></td>
+                    </tr>
+                  ))}
+                  {s.lots.map((l, i) => (
+                    <tr key={`l${i}`}>
+                      <td><strong>{l.produit}</strong><div className="secondaire">Lot {l.numero || 'sans numéro'} · {formaterNombre(l.quantite)} pièces</div></td>
+                      <td className="nombre"><span className={`pastille ${l.perime ? 'rouge' : 'orange'}`}>{l.perime ? 'Périmé' : 'Exp.'} {formaterJour(l.peremption)}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {(s.nbStockBas > s.stockBas.length || s.nbLotsAEcouler + s.nbLotsPerimes > s.lots.length) && (
+              <div className="corps" style={{ paddingTop: 10 }}><a href="#/stock">Voir toutes les alertes ({s.nbStockBas} sous le seuil, {s.nbLotsAEcouler + s.nbLotsPerimes} lot(s))</a></div>
+            )}
+          </div>
+        )}
       </div>
-      <Message type="info">
-        Produits, achats, stock, ventes et trésorerie sont disponibles. Les rapports (ventes, marges, résultat du mois)
-        arrivent au lot 5.
-      </Message>
+
+      <p className="secondaire" style={{ color: 'var(--texte-3)', fontSize: 12, marginTop: 16 }}>
+        {poste?.nomAppareil} · clé valable jusqu’au {formaterDate(poste?.certificatExpireLe)}
+      </p>
     </>
   );
 }

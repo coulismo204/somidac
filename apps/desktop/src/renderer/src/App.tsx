@@ -13,17 +13,18 @@ import { ChangementMotDePasse } from './pages/ChangementMotDePasse';
 import { Configuration } from './pages/configuration/Configuration';
 import { Connexion } from './pages/Connexion';
 import { Achats } from './pages/achats/Achats';
-import { ModuleAVenir } from './pages/ModuleAVenir';
 import { Produits } from './pages/produits/Produits';
 import { Stock } from './pages/stock/Stock';
 import { TableauDeBord } from './pages/TableauDeBord';
 import { Ventes } from './pages/ventes/Ventes';
 import { Tresorerie } from './pages/tresorerie/Tresorerie';
+import { Rapports } from './pages/rapports/Rapports';
 import { Verrouillage } from './pages/Verrouillage';
 
-function Autorise({ permission, children }: { permission: string; children: ReactNode }) {
+/** Il suffit d'une des permissions données. */
+function Autorise({ permission, children }: { permission: string | string[]; children: ReactNode }) {
   const { peut } = useSession();
-  return peut(permission) ? <>{children}</> : <Navigate to="/" replace />;
+  return (Array.isArray(permission) ? permission : [permission]).some((p) => peut(p)) ? <>{children}</> : <Navigate to="/" replace />;
 }
 
 function ErreurDemarrage() {
@@ -68,7 +69,7 @@ export function App() {
           <Route path="/achats" element={<Autorise permission={PERMISSIONS.ACHATS_SAISIR}><Achats /></Autorise>} />
           <Route path="/ventes" element={<Autorise permission={PERMISSIONS.VENTES_SAISIR}><Ventes /></Autorise>} />
           <Route path="/tresorerie" element={<Autorise permission={PERMISSIONS.TRESORERIE_ENCAISSER}><Tresorerie /></Autorise>} />
-          <Route path="/rapports" element={<ModuleAVenir titre="Rapports" lot={5} description="Ventes, marges, stock valorisé et résultat du mois." />} />
+          <Route path="/rapports" element={<Autorise permission={[PERMISSIONS.RAPPORTS_TOUS, PERMISSIONS.RAPPORTS_STOCK, PERMISSIONS.RAPPORTS_SES_VENTES, PERMISSIONS.AUDIT_VOIR]}><Rapports /></Autorise>} />
           <Route path="/utilisateurs" element={<Autorise permission={PERMISSIONS.ADMIN_UTILISATEURS}><Utilisateurs /></Autorise>} />
           <Route path="/appareils" element={<Autorise permission={PERMISSIONS.ADMIN_APPAREILS}><Appareils /></Autorise>} />
           <Route path="/parametres" element={<Autorise permission={PERMISSIONS.ADMIN_PARAMETRES}><Parametres /></Autorise>} />

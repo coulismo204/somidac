@@ -341,3 +341,16 @@ table.tableau { width: 100%; border-collapse: collapse; }
 .doc-recu-montant span { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #7a8399; }
 .doc-recu-montant strong { font-size: 22px; color: var(--bleu-nuit); }
 .pastille { white-space: nowrap; }
+
+/* ---------- Lot 5 : tableau de bord et rapports ---------- */
+.grille-tableau-de-bord { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.top-ligne { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin-bottom: 4px; }
+.top-ligne .secondaire { color: var(--texte-3); font-size: 12px; margin-left: 6px; }
+.barre-progression { height: 8px; border-radius: 4px; background: var(--bleu-clair); overflow: hidden; }
+.barre-progression div { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--bleu), var(--or)); }
+.tableau tfoot .ligne-total td { font-weight: 700; background: var(--or-clair); border-top: 2px solid var(--or); color: var(--bleu-nuit); }
+.doc-ligne-total td { font-weight: 700; background: #fbf8ef; border-top: 2px solid var(--or); }
+.doc-rapport .doc-table td, .doc-rapport .doc-table th { font-size: 10.5px; padding: 5px 6px; }
+.doc-rapport { min-height: auto; }
+.doc-rapport .doc-raison { white-space: nowrap; }
+.doc-rapport .doc-titre { max-width: 60%; }

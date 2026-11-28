@@ -16,6 +16,9 @@ interface Parametres {
   tvaActive: boolean;
   tauxTvaPct: number;
   delaiAlertePeremptionJours: number;
+  heureOuverture: string;
+  heureFermeture: string;
+  seuilAlerteEcart: number;
   nbMaxAppareils: number;
   modulesActifs: string[];
 }
@@ -108,6 +111,18 @@ export function Parametres() {
                 max={730}
                 value={p.delaiAlertePeremptionJours}
                 onChange={(e) => setP({ ...p, delaiAlertePeremptionJours: Number(e.target.value) })}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <Champ libelle="Ouverture" aide="Opérations hors de ces heures signalées au gérant" type="time" value={p.heureOuverture} onChange={(e) => setP({ ...p, heureOuverture: e.target.value })} />
+                <Champ libelle="Fermeture" type="time" value={p.heureFermeture} onChange={(e) => setP({ ...p, heureFermeture: e.target.value })} />
+              </div>
+              <Champ
+                libelle="Seuil d’alerte d’écart (FCFA)"
+                aide="Écart de caisse ou d’inventaire signalé au gérant à partir de ce montant"
+                type="number"
+                min={0}
+                value={p.seuilAlerteEcart}
+                onChange={(e) => setP({ ...p, seuilAlerteEcart: Number(e.target.value) })}
               />
               <Champ
                 libelle="Nombre maximal d'appareils"
