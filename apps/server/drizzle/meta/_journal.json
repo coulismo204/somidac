@@ -50,6 +50,13 @@
       "when": 1795859352200,
       "tag": "0006_alertes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795861753345,
+      "tag": "0007_stock_ouverture",
+      "breakpoints": true
     }
   ]
 }

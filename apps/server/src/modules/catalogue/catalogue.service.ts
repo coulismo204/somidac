@@ -19,7 +19,7 @@ import { ErreurMetier } from '../../noyau/commun/erreurs';
 import type { UtilisateurConnecte } from '../../noyau/commun/requete';
 
 /** Code interne des produits (P-0001) : série unique, non annuelle. */
-async function codeProduitSuivant(tx: Tx): Promise<string> {
+export async function codeProduitSuivant(tx: Tx): Promise<string> {
   const [ligne] = await tx
     .insert(sequencesDocuments)
     .values({ type: 'PRD', annee: 0, derniereValeur: 1 })

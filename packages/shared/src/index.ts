@@ -7,3 +7,4 @@ export * from './securite';
 export * from './catalogue';
 export * from './ventes';
 export * from './tresorerie';
+export * from './import';

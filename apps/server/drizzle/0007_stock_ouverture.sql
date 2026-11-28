@@ -1,0 +1,1 @@
+ALTER TYPE "public"."type_mouvement" ADD VALUE 'ouverture';

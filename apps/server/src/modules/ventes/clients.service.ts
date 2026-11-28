@@ -9,7 +9,7 @@ import type { UtilisateurConnecte } from '../../noyau/commun/requete';
 import { ParametresService } from '../../noyau/parametres/parametres.service';
 
 /** Code client (C-0001) : série unique, non annuelle. */
-async function codeClientSuivant(tx: Tx): Promise<string> {
+export async function codeClientSuivant(tx: Tx): Promise<string> {
   const [ligne] = await tx
     .insert(sequencesDocuments)
     .values({ type: 'CLI', annee: 0, derniereValeur: 1 })

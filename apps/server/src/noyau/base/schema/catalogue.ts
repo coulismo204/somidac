@@ -158,6 +158,8 @@ export const typeMouvement = pgEnum('type_mouvement', [
   'casse',
   'peremption',
   'inventaire',
+  /** Stock d'ouverture saisi à la mise en service (lot 6). */
+  'ouverture',
 ]);
 
 /** Tout mouvement de stock, avec son document d'origine (§7, table centrale). */
