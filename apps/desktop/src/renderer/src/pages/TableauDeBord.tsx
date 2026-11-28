@@ -17,6 +17,7 @@ export function TableauDeBord() {
   const [stock, setStock] = useState<{ stockBas: number; lotsBientotPerimes: number; lotsPerimes: number; valeurTotale?: number }>();
   const [ventes, setVentes] = useState<{ caJour: number; caMois: number; livraisonsJour: number; livraisonsMois: number; bonsAFacturer: number; facturesNonSoldees: number; resteDuClients: number }>();
   const [ventesErreur, setVentesErreur] = useState<string>();
+  const [tresorerie, setTresorerie] = useState<{ parType: Record<string, number | null>; total: number | null; encaissementsJour: number; depensesMois: number; dettesFournisseurs: number; cloturesAValider: number; derniereCloture: { jour: string; ecart: number | null } | null }>();
 
   useEffect(() => {
     appeler<Parametres>('GET', '/parametres').then(setP).catch(() => undefined);
@@ -27,6 +28,9 @@ export function TableauDeBord() {
       appeler<NonNullable<typeof ventes>>('GET', '/ventes/resume')
         .then(setVentes)
         .catch((e) => setVentesErreur(e?.code === 'MODULE_DESACTIVE' ? 'Module Ventes désactivé' : 'Indisponible'));
+    }
+    if (peut('tableau_de_bord.complet')) {
+      appeler<NonNullable<typeof tresorerie>>('GET', '/tresorerie/resume').then(setTresorerie).catch(() => undefined);
     }
     if (peut('admin.sauvegardes')) {
       appeler<{ alertes: string[] }>('GET', '/sauvegardes').then((e) => setAlertesSauvegarde(e.alertes)).catch(() => undefined);
@@ -46,6 +50,18 @@ export function TableauDeBord() {
           <p>{p?.raisonSociale ?? 'SOMIDAC SARL'} · {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(new Date())}</p>
         </div>
       </div>
+      {tresorerie && tresorerie.cloturesAValider > 0 && peut('caisse.valider') && (
+        <div style={{ marginBottom: 12 }}>
+          <Message type="attention">
+            {tresorerie.cloturesAValider} clôture(s) de caisse à valider. <a href="#/tresorerie">Ouvrir la trésorerie</a>
+          </Message>
+        </div>
+      )}
+      {tresorerie?.derniereCloture?.ecart ? (
+        <div style={{ marginBottom: 12 }}>
+          <Message type="attention">Écart de {formaterMontant(tresorerie.derniereCloture.ecart)} à la dernière clôture de caisse ({formaterDate(tresorerie.derniereCloture.jour)}).</Message>
+        </div>
+      ) : null}
       {alertesSauvegarde.map((a) => (
         <div key={a} style={{ marginBottom: 12 }}>
           <Message type="attention">
@@ -80,11 +96,26 @@ export function TableauDeBord() {
             {stock?.valeurTotale !== undefined ? ` · valeur ${formaterMontant(stock.valeurTotale)}` : ''}
           </div>
         </a>
-        <div className="carte indicateur">
-          <div className="libelle">Trésorerie</div>
-          <div className="valeur">-</div>
-          <div className="detail">Disponible avec le module Trésorerie (lot 4)</div>
-        </div>
+        <a className="carte indicateur cliquable" href="#/tresorerie">
+          <div className="libelle">{tresorerie && tresorerie.total == null ? 'Trésorerie hors caisse' : 'Trésorerie'}</div>
+          <div className="valeur">{tresorerie ? (tresorerie.total != null ? formaterMontant(tresorerie.total) : formaterMontant((tresorerie.parType.mobile_money ?? 0) + (tresorerie.parType.banque ?? 0))) : '-'}</div>
+          <div className="detail">
+            {tresorerie
+              ? [
+                  tresorerie.parType.caisse != null ? `Caisse ${formaterMontant(tresorerie.parType.caisse)}` : 'Caisse : visible du gérant',
+                  `Mobile Money ${formaterMontant(tresorerie.parType.mobile_money ?? 0)}`,
+                  `Banque ${formaterMontant(tresorerie.parType.banque ?? 0)}`,
+                ].join(' · ')
+              : 'Chiffres réservés au gérant et au caissier'}
+          </div>
+        </a>
+        {tresorerie && (
+          <a className="carte indicateur cliquable" href="#/tresorerie">
+            <div className="libelle">Dettes fournisseurs</div>
+            <div className="valeur" style={{ color: tresorerie.dettesFournisseurs ? 'var(--alerte)' : undefined }}>{formaterMontant(tresorerie.dettesFournisseurs)}</div>
+            <div className="detail">Dépenses du mois : {formaterMontant(tresorerie.depensesMois)}</div>
+          </a>
+        )}
         <div className="carte indicateur">
           <div className="libelle">Cet appareil</div>
           <div className="valeur" style={{ fontSize: 17 }}>{poste?.nomAppareil}</div>
@@ -92,8 +123,8 @@ export function TableauDeBord() {
         </div>
       </div>
       <Message type="info">
-        Produits, achats, stock et ventes (bons de livraison, factures, avoirs) sont disponibles. L’encaissement des
-        factures et la trésorerie arrivent au lot 4.
+        Produits, achats, stock, ventes et trésorerie sont disponibles. Les rapports (ventes, marges, résultat du mois)
+        arrivent au lot 5.
       </Message>
     </>
   );

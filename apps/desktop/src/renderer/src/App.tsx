@@ -18,6 +18,7 @@ import { Produits } from './pages/produits/Produits';
 import { Stock } from './pages/stock/Stock';
 import { TableauDeBord } from './pages/TableauDeBord';
 import { Ventes } from './pages/ventes/Ventes';
+import { Tresorerie } from './pages/tresorerie/Tresorerie';
 import { Verrouillage } from './pages/Verrouillage';
 
 function Autorise({ permission, children }: { permission: string; children: ReactNode }) {
@@ -66,7 +67,7 @@ export function App() {
           <Route path="/stock" element={<Stock />} />
           <Route path="/achats" element={<Autorise permission={PERMISSIONS.ACHATS_SAISIR}><Achats /></Autorise>} />
           <Route path="/ventes" element={<Autorise permission={PERMISSIONS.VENTES_SAISIR}><Ventes /></Autorise>} />
-          <Route path="/tresorerie" element={<ModuleAVenir titre="Trésorerie" lot={4} description="Encaissements, dépenses et clôture de caisse." />} />
+          <Route path="/tresorerie" element={<Autorise permission={PERMISSIONS.TRESORERIE_ENCAISSER}><Tresorerie /></Autorise>} />
           <Route path="/rapports" element={<ModuleAVenir titre="Rapports" lot={5} description="Ventes, marges, stock valorisé et résultat du mois." />} />
           <Route path="/utilisateurs" element={<Autorise permission={PERMISSIONS.ADMIN_UTILISATEURS}><Utilisateurs /></Autorise>} />
           <Route path="/appareils" element={<Autorise permission={PERMISSIONS.ADMIN_APPAREILS}><Appareils /></Autorise>} />

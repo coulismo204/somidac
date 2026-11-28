@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icone, Message, Modale } from '../../composants/communs';
 import { ApercuDocument, DocumentBonReception, useEntreprise } from '../../composants/Documents';
+import { Justificatifs } from '../../composants/Justificatifs';
+import { ChoixCompte, useComptes } from '../tresorerie/Paiements';
 import { messageErreur, useSession } from '../../contexte';
 import { aujourdhuiIso, formaterJour, formaterMontant, formaterNombre } from '../../format';
 import type { Produit } from '../produits/FicheProduit';
@@ -28,6 +30,7 @@ interface AchatDetail {
   referenceFournisseur: string | null;
   notes: string | null;
   montantPaye: number;
+  comptePaiementId: string | null;
   totalMarchandises: number;
   totalFrais: number;
   total: number;
@@ -41,7 +44,8 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [detail, setDetail] = useState<AchatDetail>();
-  const [entete, setEntete] = useState({ fournisseurId: '', date: aujourdhuiIso(), referenceFournisseur: '', notes: '', montantPaye: 0 });
+  const [entete, setEntete] = useState({ fournisseurId: '', date: aujourdhuiIso(), referenceFournisseur: '', notes: '', montantPaye: 0, comptePaiementId: '' });
+  const comptes = useComptes();
   const [lignes, setLignes] = useState<Ligne[]>([]);
   const [frais, setFrais] = useState<Frais[]>([]);
   const [ajout, setAjout] = useState('');
@@ -62,7 +66,7 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
       if (id) {
         const d = await appeler<AchatDetail>('GET', `/achats/${id}`);
         setDetail(d);
-        setEntete({ fournisseurId: d.fournisseurId, date: d.date, referenceFournisseur: d.referenceFournisseur ?? '', notes: d.notes ?? '', montantPaye: d.montantPaye });
+        setEntete({ fournisseurId: d.fournisseurId, date: d.date, referenceFournisseur: d.referenceFournisseur ?? '', notes: d.notes ?? '', montantPaye: d.montantPaye, comptePaiementId: d.comptePaiementId ?? '' });
         setLignes(d.lignes.map((l) => ({ produitId: l.produitId, conditionnementId: l.conditionnementId, quantite: l.quantite, prixUnitaire: l.prixUnitaire, numeroLot: l.numeroLot ?? '', datePeremption: l.datePeremption ?? '' })));
         setFrais(d.frais.map((x) => ({ libelle: x.libelle, montant: x.montant })));
       }
@@ -98,6 +102,7 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
     referenceFournisseur: entete.referenceFournisseur || null,
     notes: entete.notes || null,
     montantPaye: Number(entete.montantPaye) || 0,
+    comptePaiementId: Number(entete.montantPaye) > 0 ? entete.comptePaiementId || null : null,
     lignes: lignes.map((l) => ({ ...l, quantite: Number(l.quantite), prixUnitaire: Number(l.prixUnitaire), numeroLot: l.numeroLot || null, datePeremption: l.datePeremption || null })),
     frais: frais.filter((x) => x.libelle.trim()).map((x) => ({ libelle: x.libelle.trim(), montant: Number(x.montant) || 0 })),
   });
@@ -290,8 +295,22 @@ export function EditeurAchat({ id, onFermer }: { id?: string; onFermer: (modifie
             <span className="nombre">
               {lectureSeule ? formaterMontant(entete.montantPaye) : <input type="number" min={0} className="nombre" style={{ width: 140, height: 32, borderRadius: 6, border: '1px solid var(--bord)', padding: '0 8px', textAlign: 'right' }} value={entete.montantPaye} onChange={(e) => setEntete({ ...entete, montantPaye: Number(e.target.value) })} />}
             </span>
+            {!lectureSeule && Number(entete.montantPaye) > 0 && (
+              <>
+                <span>Payé depuis</span>
+                <span style={{ minWidth: 200 }}>
+                  <ChoixCompte id="compte-achat" comptes={comptes} valeur={entete.comptePaiementId || comptes.find((c) => c.type === 'caisse')?.id || ''} onChange={(v) => setEntete({ ...entete, comptePaiementId: v })} />
+                </span>
+              </>
+            )}
             <span>Reste à payer</span><span className="nombre"><strong>{formaterMontant(Math.max(0, total - Number(entete.montantPaye)))}</strong></span>
           </div>
+          {idCourant && (
+            <div style={{ padding: '0 20px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>Photo de la facture du grossiste</span>
+              <Justificatifs documentType="achat" documentId={idCourant} />
+            </div>
+          )}
           {!lectureSeule && (
             <div className="pied-modale" style={{ borderTop: '1px solid var(--bord)' }}>
               <button className="bouton discret" style={{ color: 'var(--danger)', marginRight: 'auto' }} onClick={() => void supprimer()}>Supprimer le brouillon</button>

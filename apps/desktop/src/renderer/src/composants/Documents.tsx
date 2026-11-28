@@ -272,7 +272,7 @@ export interface FactureImprimable {
   tva: number;
   totalTTC: number;
   bonLivraison: { numero: string | null; date: string };
-  client: { code: string; raisonSociale: string; adresse: string | null; telephone: string | null; nif: string | null; conditionPaiement: string };
+  client: { id: string; code: string; raisonSociale: string; adresse: string | null; telephone: string | null; nif: string | null; conditionPaiement: string };
   lignes: { id: string; codeProduit: string; designation: string; conditionnement: string; quantite: number; prixUnitaire: number; remisePct: number; montant: number }[];
 }
 
@@ -474,6 +474,81 @@ export function DocumentBonReception({ r, e }: { r: ReceptionImprimable; e: Entr
           <div className="doc-libelle">Livré par le fournisseur</div>
           <div className="doc-case">Nom et signature</div>
         </div>
+      </div>
+      <Pied e={e} />
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ reçu de paiement
+
+export interface RecuImprimable {
+  numero: string;
+  date: string;
+  montant: number;
+  reference: string | null;
+  statut: 'valide' | 'annule';
+  compte: { nom: string; type: 'caisse' | 'mobile_money' | 'banque' };
+  par: string | null;
+  client: { code: string; raisonSociale: string; adresse: string | null; telephone: string | null; nif: string | null } | null;
+  affectations: { id: string; numero: string; date: string; total: number; montant: number; resteDu: number }[];
+}
+
+const MODES: Record<string, string> = { caisse: 'Espèces', mobile_money: 'Mobile Money', banque: 'Banque' };
+
+/** Reçu remis au client à chaque encaissement (§8) : montant, mode, factures réglées, reste dû. */
+export function DocumentRecu({ r, e }: { r: RecuImprimable; e: Entreprise }) {
+  const client = r.client!;
+  return (
+    <div className="doc">
+      <EnTete
+        e={e}
+        titre="Reçu de paiement"
+        numero={r.numero}
+        date={r.date}
+        mention={r.statut === 'annule' ? 'Annulé' : undefined}
+        tiers={{ libelle: 'Reçu de', nom: client.raisonSociale, code: client.code, adresse: client.adresse, telephone: client.telephone, nif: client.nif }}
+        references={[
+          ['Mode de paiement', `${MODES[r.compte.type]}${r.compte.type === 'caisse' ? '' : ` (${r.compte.nom})`}`],
+          ['Référence', r.reference],
+          ['Reçu par', r.par],
+        ]}
+      />
+      <div className="doc-recu-montant">
+        <span>Montant reçu</span>
+        <strong>{formaterMontant(r.montant, e.devise)}</strong>
+      </div>
+      <p className="doc-lettres">
+        Reçu la somme de : <strong>{montantEnLettres(r.montant, e.devise)}</strong>.
+      </p>
+      <table className="doc-table">
+        <thead>
+          <tr>
+            <th>Facture réglée</th>
+            <th>Date</th>
+            <th className="nombre">Net à payer</th>
+            <th className="nombre">Payé ici</th>
+            <th className="nombre">Reste dû</th>
+          </tr>
+        </thead>
+        <tbody>
+          {r.affectations.map((a) => (
+            <tr key={a.id}>
+              <td>{a.numero}</td>
+              <td>{formaterJour(a.date)}</td>
+              <td className="nombre">{formaterNombre(a.total)}</td>
+              <td className="nombre">{formaterNombre(a.montant)}</td>
+              <td className="nombre">{a.resteDu > 0 ? formaterNombre(a.resteDu) : 'Soldée'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="doc-signatures">
+        <div>
+          <div className="doc-libelle">Pour {e.raisonSociale}</div>
+          <div className="doc-case">Signature et cachet</div>
+        </div>
+        <div />
       </div>
       <Pied e={e} />
     </div>

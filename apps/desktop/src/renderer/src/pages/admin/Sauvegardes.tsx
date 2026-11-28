@@ -37,6 +37,7 @@ const LIBELLES_DECLENCHEMENT: Record<string, string> = {
   automatique: 'Automatique',
   manuelle: 'Manuelle',
   'avant-restauration': 'Avant restauration',
+  'cloture-caisse': 'Clôture de caisse',
 };
 
 const taille = (o: number | null) => (o == null ? '-' : o > 1024 * 1024 ? `${(o / 1024 / 1024).toFixed(1)} Mo` : `${Math.ceil(o / 1024)} Ko`);

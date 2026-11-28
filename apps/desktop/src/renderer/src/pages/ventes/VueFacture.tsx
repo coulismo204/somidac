@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Message, Modale } from '../../composants/communs';
 import { ApercuDocument, AvoirImprimable, DocumentAvoir, DocumentFacture, FactureImprimable, useEntreprise } from '../../composants/Documents';
 import { messageErreur, useSession } from '../../contexte';
+import { Encaissement, FichePaiement } from '../tresorerie/Paiements';
 import { formaterJour, formaterMontant, formaterNombre } from '../../format';
 
 export type StatutPaiement = 'non_payee' | 'partielle' | 'payee' | 'annulee';
@@ -30,6 +31,7 @@ interface FactureDetail extends FactureImprimable {
   marge?: number;
   lignes: (FactureImprimable['lignes'][number] & { quantiteRetournee: number })[];
   avoirs: { id: string; numero: string; date: string; motif: string; totalTTC: number }[];
+  paiements: { id: string; numero: string; date: string; montant: number; statut: 'valide' | 'annule'; compte: string }[];
 }
 
 /** Retour après facture (§5.5) : un avoir, la marchandise revient en stock ou part en casse. */
@@ -129,7 +131,8 @@ export function VueFacture({ id, onFermer, onOuvrirAvoir, onOuvrirLivraison }: {
   const entreprise = useEntreprise();
   const [f, setF] = useState<FactureDetail & { bonLivraison: { id: string } }>();
   const [erreur, setErreur] = useState<string>();
-  const [modale, setModale] = useState<'imprimer' | 'avoir'>();
+  const [modale, setModale] = useState<'imprimer' | 'avoir' | 'encaisser'>();
+  const [paiement, setPaiement] = useState<string>();
 
   const charger = useCallback(() => {
     appeler<FactureDetail & { bonLivraison: { id: string } }>('GET', `/factures/${id}`).then(setF).catch((e) => setErreur(messageErreur(e)));
@@ -150,6 +153,7 @@ export function VueFacture({ id, onFermer, onOuvrirAvoir, onOuvrirLivraison }: {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
+          {f.resteDu > 0 && peut(PERMISSIONS.TRESORERIE_ENCAISSER) && <button className="bouton" onClick={() => setModale('encaisser')}>Encaisser</button>}
           <button className="bouton secondaire" onClick={() => setModale('imprimer')}>Imprimer / PDF</button>
           {peut(PERMISSIONS.DOCUMENTS_ANNULER) && !toutRetourne && <button className="bouton secondaire" onClick={() => setModale('avoir')}>Faire un avoir</button>}
           <button className="bouton secondaire" onClick={onFermer}>Retour à la liste</button>
@@ -185,7 +189,14 @@ export function VueFacture({ id, onFermer, onOuvrirAvoir, onOuvrirLivraison }: {
         )}
       </div>
 
-      {f.resteDu > 0 && <div style={{ marginBottom: 16 }}><Message type="info">L’encaissement de cette facture se fera avec le module Trésorerie (lot 4).</Message></div>}
+      {f.resteDu > 0 && f.client.conditionPaiement === 'comptant' && peut(PERMISSIONS.TRESORERIE_ENCAISSER) && (
+        <div style={{ marginBottom: 16 }}>
+          <Message type="attention">
+            Paiement à la livraison : {formaterMontant(f.resteDu)} à encaisser.{' '}
+            <button className="bouton petit" style={{ marginLeft: 8 }} onClick={() => setModale('encaisser')}>Encaisser maintenant</button>
+          </Message>
+        </div>
+      )}
 
       <div className="carte">
         <table className="tableau">
@@ -229,6 +240,24 @@ export function VueFacture({ id, onFermer, onOuvrirAvoir, onOuvrirLivraison }: {
         </div>
       </div>
 
+      {f.paiements.length > 0 && (
+        <div className="carte" style={{ marginTop: 16 }}>
+          <div className="entete-carte"><h3>Paiements reçus</h3><span style={{ color: 'var(--texte-2)' }}>{formaterMontant(f.montantPaye)}</span></div>
+          <table className="tableau">
+            <tbody>
+              {f.paiements.map((p) => (
+                <tr key={p.id} className="cliquable" onClick={() => setPaiement(p.id)} style={p.statut === 'annule' ? { opacity: 0.55 } : undefined}>
+                  <td className="mono">{p.numero}{p.statut === 'annule' && <span className="pastille grise" style={{ marginLeft: 8 }}>Annulé</span>}</td>
+                  <td>{formaterJour(p.date)}</td>
+                  <td>{p.compte}</td>
+                  <td className="nombre">{formaterMontant(p.montant)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {f.avoirs.length > 0 && (
         <div className="carte" style={{ marginTop: 16 }}>
           <div className="entete-carte"><h3>Avoirs</h3></div>
@@ -252,6 +281,18 @@ export function VueFacture({ id, onFermer, onOuvrirAvoir, onOuvrirLivraison }: {
           <DocumentFacture f={f} e={entreprise} />
         </ApercuDocument>
       )}
+      {modale === 'encaisser' && (
+        <Encaissement
+          clientId={f.client.id}
+          factureId={f.id}
+          onFermer={(id) => {
+            setModale(undefined);
+            charger();
+            if (id) setPaiement(id);
+          }}
+        />
+      )}
+      {paiement && <FichePaiement id={paiement} onFermer={() => { setPaiement(undefined); charger(); }} />}
       {modale === 'avoir' && (
         <NouvelAvoir
           f={f}

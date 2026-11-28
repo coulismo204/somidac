@@ -322,3 +322,22 @@ table.tableau { width: 100%; border-collapse: collapse; }
 .tableau input.nombre:disabled { padding-right: 0; }
 .tableau th.nombre { text-align: right; }
 .carte > .pied-modale { padding: 14px 20px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- Lot 4 : trésorerie ---------- */
+.justificatifs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.justificatif { border: 1px solid var(--bord); background: var(--bleu-clair); color: var(--bleu); border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.justificatif span { color: var(--texte-3); font-weight: 400; margin-left: 4px; }
+.compte-carte { text-align: left; font: inherit; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+.compte-carte:hover { border-color: #c8d6f0; }
+.compte-carte.actif { border-color: var(--bleu); box-shadow: 0 0 0 3px rgba(11, 61, 145, 0.15); }
+.montant-entree { color: var(--succes); font-weight: 600; }
+.montant-sortie { color: var(--danger); font-weight: 600; }
+.billetage { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 14px; }
+.billetage label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--texte-2); }
+.billetage label span { width: 64px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--texte); }
+.billetage input { width: 70px; height: 32px; border-radius: 6px; border: 1px solid var(--bord); padding: 0 8px; text-align: right; }
+.grand-montant { font-size: 26px; font-weight: 700; color: var(--bleu-nuit); font-variant-numeric: tabular-nums; }
+.doc-recu-montant { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border: 2px solid var(--or); border-radius: 6px; background: #fbf8ef; }
+.doc-recu-montant span { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #7a8399; }
+.doc-recu-montant strong { font-size: 22px; color: var(--bleu-nuit); }
+.pastille { white-space: nowrap; }
